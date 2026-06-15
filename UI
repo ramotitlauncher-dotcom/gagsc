@@ -177,43 +177,53 @@ local Icons = {
 }
 
 -- ============================================================
--- TEMA WARNA (ubah di sini untuk kustomisasi mudah)
+-- TEMA WARNA — Hitam & Putih
 -- ============================================================
 local THEME = {
     -- Background utama
-    MainBG          = Color3.fromRGB(245, 247, 252),   -- putih kebiruan
+    MainBG          = Color3.fromRGB(255, 255, 255),   -- putih bersih
+
     -- Top bar
-    TopBarBG        = Color3.fromRGB(25, 90, 210),     -- biru gelap
+    TopBarBG        = Color3.fromRGB(15, 15, 15),      -- hitam pekat
     TopBarText      = Color3.fromRGB(255, 255, 255),   -- putih
+
     -- Panel tab kiri
-    TabPanelBG      = Color3.fromRGB(215, 230, 255),   -- biru muda
-    TabItemBG       = Color3.fromRGB(200, 220, 255),   -- biru muda lebih pekat
+    TabPanelBG      = Color3.fromRGB(240, 240, 240),   -- abu sangat muda
+    TabItemBG       = Color3.fromRGB(228, 228, 228),   -- abu muda
     TabItemText     = Color3.fromRGB(15, 15, 15),      -- hitam
+
     -- Area konten kanan
-    ContentBG       = Color3.fromRGB(250, 252, 255),   -- hampir putih
+    ContentBG       = Color3.fromRGB(255, 255, 255),   -- putih
     ContentTabName  = Color3.fromRGB(15, 15, 15),      -- hitam
+
     -- Section
-    SectionBG       = Color3.fromRGB(210, 228, 255),   -- biru muda
-    SectionText     = Color3.fromRGB(10, 10, 10),      -- hitam
+    SectionBG       = Color3.fromRGB(220, 220, 220),   -- abu
+    SectionText     = Color3.fromRGB(15, 15, 15),      -- hitam
+
     -- Item (toggle, slider, input, dll)
-    ItemBG          = Color3.fromRGB(230, 240, 255),   -- biru sangat muda
+    ItemBG          = Color3.fromRGB(245, 245, 245),   -- putih abu
     ItemTitle       = Color3.fromRGB(15, 15, 15),      -- hitam
-    ItemContent     = Color3.fromRGB(60, 60, 60),      -- abu gelap
+    ItemContent     = Color3.fromRGB(80, 80, 80),      -- abu gelap
+
     -- Notifikasi
-    NotifyBG        = Color3.fromRGB(240, 245, 255),   -- putih kebiruan
-    NotifyTitle     = Color3.fromRGB(10, 10, 10),      -- hitam
-    NotifyContent   = Color3.fromRGB(50, 50, 50),      -- abu
+    NotifyBG        = Color3.fromRGB(255, 255, 255),   -- putih
+    NotifyTitle     = Color3.fromRGB(15, 15, 15),      -- hitam
+    NotifyContent   = Color3.fromRGB(60, 60, 60),      -- abu
+
     -- Dropdown popup
-    DropdownBG      = Color3.fromRGB(235, 245, 255),   -- putih kebiruan
+    DropdownBG      = Color3.fromRGB(255, 255, 255),   -- putih
     DropdownText    = Color3.fromRGB(15, 15, 15),      -- hitam
+
     -- Tombol
-    ButtonBG        = Color3.fromRGB(215, 230, 255),   -- biru muda
-    ButtonText      = Color3.fromRGB(15, 15, 15),      -- hitam
+    ButtonBG        = Color3.fromRGB(20, 20, 20),      -- hitam
+    ButtonText      = Color3.fromRGB(255, 255, 255),   -- putih
+
     -- Search bar
-    SearchBG        = Color3.fromRGB(220, 235, 255),   -- biru muda
+    SearchBG        = Color3.fromRGB(235, 235, 235),   -- abu muda
     SearchText      = Color3.fromRGB(10, 10, 10),      -- hitam
+
     -- Input box
-    InputBG         = Color3.fromRGB(230, 242, 255),   -- biru sangat muda
+    InputBG         = Color3.fromRGB(235, 235, 235),   -- abu muda
     InputText       = Color3.fromRGB(10, 10, 10),      -- hitam
 }
 -- ============================================================
@@ -395,7 +405,7 @@ function Chloex:MakeNotify(NotifyConfig)
     NotifyConfig.Title = NotifyConfig.Title or "HexRoot Hub"
     NotifyConfig.Description = NotifyConfig.Description or "Notification"
     NotifyConfig.Content = NotifyConfig.Content or "Content"
-    NotifyConfig.Color = NotifyConfig.Color or Color3.fromRGB(25, 90, 210)
+    NotifyConfig.Color = NotifyConfig.Color or Color3.fromRGB(15, 15, 15)
     NotifyConfig.Time = NotifyConfig.Time or 0.5
     NotifyConfig.Delay = NotifyConfig.Delay or 5
     local NotifyFunction = {}
@@ -457,7 +467,6 @@ function Chloex:MakeNotify(NotifyConfig)
         NotifyFrame.AnchorPoint = Vector2.new(0, 1)
         NotifyFrame.Position = UDim2.new(0, 0, 1, -(NotifyPosHeigh))
 
-        -- Notifikasi background putih kebiruan
         NotifyFrameReal.BackgroundColor3 = THEME.NotifyBG
         NotifyFrameReal.BorderColor3 = Color3.fromRGB(0, 0, 0)
         NotifyFrameReal.BorderSizePixel = 0
@@ -476,7 +485,6 @@ function Chloex:MakeNotify(NotifyConfig)
         DropShadowHolder.Name = "DropShadowHolder"
         DropShadowHolder.Parent = NotifyFrameReal
 
-        -- Top bar notif - biru
         Top.BackgroundColor3 = THEME.TopBarBG
         Top.BackgroundTransparency = 0
         Top.BorderColor3 = Color3.fromRGB(0, 0, 0)
@@ -485,7 +493,6 @@ function Chloex:MakeNotify(NotifyConfig)
         Top.Name = "Top"
         Top.Parent = NotifyFrameReal
 
-        -- Judul notif putih (kontras dengan top bar biru)
         TextLabel.Font = Enum.Font.GothamBold
         TextLabel.Text = NotifyConfig.Title
         TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -539,7 +546,6 @@ function Chloex:MakeNotify(NotifyConfig)
         ImageLabel.Size = UDim2.new(1, -8, 1, -8)
         ImageLabel.Parent = Close
 
-        -- Konten notif - teks gelap
         TextLabel2.Font = Enum.Font.GothamBold
         TextLabel2.TextColor3 = THEME.NotifyContent
         TextLabel2.TextSize = 13
@@ -596,7 +602,7 @@ function than(msg, delay, color, title, desc)
         Title = title or "HexRoot Hub",
         Description = desc or "Notification",
         Content = msg or "Content",
-        Color = color or Color3.fromRGB(25, 90, 210),
+        Color = color or Color3.fromRGB(15, 15, 15),
         Delay = delay or 4
     })
 end
@@ -605,7 +611,7 @@ function Chloex:Window(GuiConfig)
     GuiConfig              = GuiConfig or {}
     GuiConfig.Title        = GuiConfig.Title or "HexRoot Hub"
     GuiConfig.Footer       = GuiConfig.Footer or ""
-    GuiConfig.Color        = GuiConfig.Color or Color3.fromRGB(25, 90, 210)
+    GuiConfig.Color        = GuiConfig.Color or Color3.fromRGB(15, 15, 15)
     GuiConfig["Tab Width"] = GuiConfig["Tab Width"] or 120
     GuiConfig.Version      = GuiConfig.Version or 1
     if GuiConfig.Search == nil then GuiConfig.Search = true end
@@ -709,17 +715,17 @@ function Chloex:Window(GuiConfig)
 
     function GuiFunc:ImportConfig(str)
         if not str or str == "" then
-            than("Paste a config string first", 4, Color3.fromRGB(220, 50, 50), "HexRoot Hub", "Import")
+            than("Paste a config string first", 4, Color3.fromRGB(180, 50, 50), "HexRoot Hub", "Import")
             return false
         end
         local ok, dec = pcall(function() return HttpService:JSONDecode(str) end)
         if not ok or type(dec) ~= "table" then
-            than("Invalid config format", 4, Color3.fromRGB(220, 50, 50), "HexRoot Hub", "Import")
+            than("Invalid config format", 4, Color3.fromRGB(180, 50, 50), "HexRoot Hub", "Import")
             return false
         end
         local data = ExtractConfigPayload(dec)
         if not data then
-            than("Config data is empty", 4, Color3.fromRGB(220, 50, 50), "HexRoot Hub", "Import")
+            than("Config data is empty", 4, Color3.fromRGB(180, 50, 50), "HexRoot Hub", "Import")
             return false
         end
 
@@ -753,7 +759,7 @@ function Chloex:Window(GuiConfig)
 
     function GuiFunc:SaveConfigAs(name)
         if not name or name == "" then
-            than("Enter a config name first", 4, Color3.fromRGB(220, 50, 50), "HexRoot Hub", "Config")
+            than("Enter a config name first", 4, Color3.fromRGB(180, 50, 50), "HexRoot Hub", "Config")
             return false
         end
         if not writefile then return false end
@@ -769,17 +775,17 @@ function Chloex:Window(GuiConfig)
         if not name or name == "" then return false end
         local path = GameConfigFolder .. "/" .. name .. ".json"
         if not (isfile and isfile(path)) then
-            than("Config '" .. tostring(name) .. "' not found", 4, Color3.fromRGB(220, 50, 50), "HexRoot Hub", "Config")
+            than("Config '" .. tostring(name) .. "' not found", 4, Color3.fromRGB(180, 50, 50), "HexRoot Hub", "Config")
             return false
         end
         local ok, dec = pcall(function() return HttpService:JSONDecode(readfile(path)) end)
         if not ok or type(dec) ~= "table" then
-            than("Failed to read config", 4, Color3.fromRGB(220, 50, 50), "HexRoot Hub", "Config")
+            than("Failed to read config", 4, Color3.fromRGB(180, 50, 50), "HexRoot Hub", "Config")
             return false
         end
         local data = ExtractConfigPayload(dec)
         if not data then
-            than("Config data is empty", 4, Color3.fromRGB(220, 50, 50), "HexRoot Hub", "Config")
+            than("Config data is empty", 4, Color3.fromRGB(180, 50, 50), "HexRoot Hub", "Config")
             return false
         end
 
@@ -799,7 +805,7 @@ function Chloex:Window(GuiConfig)
             if GuiFunc:GetAutoLoad() == name then
                 GuiFunc:SetAutoLoad("")
             end
-            than("Deleted '" .. name .. "'", 4, Color3.fromRGB(200, 130, 0), "HexRoot Hub", "Config")
+            than("Deleted '" .. name .. "'", 4, Color3.fromRGB(100, 100, 100), "HexRoot Hub", "Config")
             return true
         end
         return false
@@ -871,8 +877,8 @@ function Chloex:Window(GuiConfig)
     DropShadowHolder.Position = UDim2.new(0, (NatUI.AbsoluteSize.X // 2 - DropShadowHolder.Size.X.Offset // 2), 0,
         (NatUI.AbsoluteSize.Y // 2 - DropShadowHolder.Size.Y.Offset // 2))
     DropShadow.Image = "rbxassetid://6015897843"
-    DropShadow.ImageColor3 = Color3.fromRGB(180, 200, 230)
-    DropShadow.ImageTransparency = 0.3
+    DropShadow.ImageColor3 = Color3.fromRGB(150, 150, 150)
+    DropShadow.ImageTransparency = 0.4
     DropShadow.ScaleType = Enum.ScaleType.Slice
     DropShadow.SliceCenter = Rect.new(49, 49, 450, 450)
     DropShadow.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -892,13 +898,12 @@ function Chloex:Window(GuiConfig)
         Main.BackgroundTransparency = 1
         Main.ImageTransparency = GuiConfig.ThemeTransparency or 0.15
     else
-        -- Background utama: putih kebiruan
         Main.BackgroundColor3 = THEME.MainBG
         Main.BackgroundTransparency = 0
     end
 
     Main.AnchorPoint = Vector2.new(0.5, 0.5)
-    Main.BorderColor3 = Color3.fromRGB(200, 215, 240)
+    Main.BorderColor3 = Color3.fromRGB(200, 200, 200)
     Main.BorderSizePixel = 0
     Main.Position = UDim2.new(0.5, 0, 0.5, 0)
     Main.Size = UDim2.new(1, -47, 1, -47)
@@ -907,7 +912,6 @@ function Chloex:Window(GuiConfig)
 
     UICorner.Parent = Main
 
-    -- Top bar: biru gelap
     Top.BackgroundColor3 = THEME.TopBarBG
     Top.BackgroundTransparency = 0
     Top.BorderColor3 = Color3.fromRGB(0, 0, 0)
@@ -916,7 +920,6 @@ function Chloex:Window(GuiConfig)
     Top.Name = "Top"
     Top.Parent = Main
 
-    -- Judul: putih (kontras di atas top bar biru)
     TextLabel.Font = Enum.Font.GothamBold
     TextLabel.Text = GuiConfig.Title
     TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -953,7 +956,7 @@ function Chloex:Window(GuiConfig)
 
         local DiscordImg = Instance.new("ImageLabel")
         DiscordImg.Image = Icons.discord
-        DiscordImg.ImageColor3 = Color3.fromRGB(200, 210, 255)
+        DiscordImg.ImageColor3 = Color3.fromRGB(180, 180, 180)
         DiscordImg.BackgroundTransparency = 1
         DiscordImg.ScaleType = Enum.ScaleType.Fit
         DiscordImg.AnchorPoint = Vector2.new(0, 0.5)
@@ -978,7 +981,7 @@ function Chloex:Window(GuiConfig)
             TweenService:Create(Divider, TweenInfo.new(0.2), { BackgroundTransparency = 0.3 }):Play()
         end)
         DiscordBtn.MouseLeave:Connect(function()
-            TweenService:Create(DiscordImg, TweenInfo.new(0.2), { ImageColor3 = Color3.fromRGB(200, 210, 255) }):Play()
+            TweenService:Create(DiscordImg, TweenInfo.new(0.2), { ImageColor3 = Color3.fromRGB(180, 180, 180) }):Play()
             TweenService:Create(Divider, TweenInfo.new(0.2), { BackgroundTransparency = 0.6 }):Play()
         end)
         DiscordBtn.Activated:Connect(function()
@@ -992,10 +995,9 @@ function Chloex:Window(GuiConfig)
         DiscordButtonRef = DiscordBtn
     end
 
-    -- Footer: putih transparan (di atas biru)
     TextLabel1.Font = Enum.Font.GothamBold
     TextLabel1.Text = GuiConfig.Footer
-    TextLabel1.TextColor3 = Color3.fromRGB(220, 235, 255)
+    TextLabel1.TextColor3 = Color3.fromRGB(160, 160, 160)
     TextLabel1.TextSize = 12
     TextLabel1.TextTransparency = 0
     TextLabel1.TextXAlignment = Enum.TextXAlignment.Left
@@ -1060,10 +1062,9 @@ function Chloex:Window(GuiConfig)
     ImageLabel2.Size = UDim2.new(1, -9, 1, -9)
     ImageLabel2.Parent = Min
 
-    -- Panel tab kiri: biru muda
     LayersTab.BackgroundColor3 = THEME.TabPanelBG
     LayersTab.BackgroundTransparency = 0
-    LayersTab.BorderColor3 = Color3.fromRGB(180, 210, 255)
+    LayersTab.BorderColor3 = Color3.fromRGB(200, 200, 200)
     LayersTab.BorderSizePixel = 0
     LayersTab.Position = UDim2.new(0, 9, 0, 50)
     LayersTab.Size = UDim2.new(0, GuiConfig["Tab Width"], 1, -59)
@@ -1075,7 +1076,7 @@ function Chloex:Window(GuiConfig)
 
     DecideFrame.AnchorPoint = Vector2.new(0.5, 0)
     DecideFrame.BackgroundColor3 = THEME.TopBarBG
-    DecideFrame.BackgroundTransparency = 0.7
+    DecideFrame.BackgroundTransparency = 0.8
     DecideFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
     DecideFrame.BorderSizePixel = 0
     DecideFrame.Position = UDim2.new(0.5, 0, 0, 38)
@@ -1083,7 +1084,6 @@ function Chloex:Window(GuiConfig)
     DecideFrame.Name = "DecideFrame"
     DecideFrame.Parent = Main
 
-    -- Area konten kanan: putih hampir bersih
     Layers.BackgroundColor3 = THEME.ContentBG
     Layers.BackgroundTransparency = 0
     Layers.BorderColor3 = Color3.fromRGB(0, 0, 0)
@@ -1096,7 +1096,6 @@ function Chloex:Window(GuiConfig)
     UICorner6.CornerRadius = UDim.new(0, 2)
     UICorner6.Parent = Layers
 
-    -- Nama tab: hitam
     NameTab.Font = Enum.Font.GothamBold
     NameTab.Text = ""
     NameTab.TextColor3 = THEME.ContentTabName
@@ -1170,7 +1169,6 @@ function Chloex:Window(GuiConfig)
 
     local SearchResults, SearchResultsLayout, SearchBox
     if GuiConfig.Search then
-        -- Search bar: biru muda
         local SearchBar = Instance.new("Frame")
         SearchBar.BackgroundColor3 = THEME.SearchBG
         SearchBar.BackgroundTransparency = 0.1
@@ -1195,11 +1193,10 @@ function Chloex:Window(GuiConfig)
         SearchIcon.Name = "SearchIcon"
         SearchIcon.Parent = SearchBar
 
-        -- Search teks: hitam
         SearchBox = Instance.new("TextBox")
         SearchBox.Font = Enum.Font.GothamBold
         SearchBox.PlaceholderText = "Search..."
-        SearchBox.PlaceholderColor3 = Color3.fromRGB(100, 130, 180)
+        SearchBox.PlaceholderColor3 = Color3.fromRGB(140, 140, 140)
         SearchBox.Text = ""
         SearchBox.TextColor3 = THEME.SearchText
         SearchBox.TextSize = 12
@@ -1286,7 +1283,6 @@ function Chloex:Window(GuiConfig)
                 RowCorner.CornerRadius = UDim.new(0, 4)
                 RowCorner.Parent = Row
 
-                -- Label hasil pencarian: hitam
                 local RowLabel = Instance.new("TextLabel")
                 RowLabel.Font = Enum.Font.GothamBold
                 RowLabel.Text = entry.label
@@ -1337,7 +1333,7 @@ function Chloex:Window(GuiConfig)
                 local Empty = Instance.new("TextLabel")
                 Empty.Font = Enum.Font.GothamBold
                 Empty.Text = "No results"
-                Empty.TextColor3 = Color3.fromRGB(100, 120, 160)
+                Empty.TextColor3 = Color3.fromRGB(120, 120, 120)
                 Empty.TextSize = 12
                 Empty.BackgroundTransparency = 1
                 Empty.Size = UDim2.new(1, 0, 0, 40)
@@ -1376,7 +1372,7 @@ function Chloex:Window(GuiConfig)
 
         local Overlay = Instance.new("Frame")
         Overlay.Size = UDim2.new(1, 0, 1, 0)
-        Overlay.BackgroundColor3 = Color3.fromRGB(200, 215, 240)
+        Overlay.BackgroundColor3 = Color3.fromRGB(180, 180, 180)
         Overlay.BackgroundTransparency = 0.4
         Overlay.ZIndex = 50
         Overlay.Parent = DropShadowHolder
@@ -1406,11 +1402,11 @@ function Chloex:Window(GuiConfig)
 
         local Gradient = Instance.new("UIGradient")
         Gradient.Color = ColorSequence.new({
-            ColorSequenceKeypoint.new(0.0, Color3.fromRGB(25, 90, 210)),
-            ColorSequenceKeypoint.new(0.25, Color3.fromRGB(180, 210, 255)),
-            ColorSequenceKeypoint.new(0.5, Color3.fromRGB(25, 90, 210)),
-            ColorSequenceKeypoint.new(0.75, Color3.fromRGB(180, 210, 255)),
-            ColorSequenceKeypoint.new(1.0, Color3.fromRGB(25, 90, 210))
+            ColorSequenceKeypoint.new(0.0, Color3.fromRGB(15, 15, 15)),
+            ColorSequenceKeypoint.new(0.25, Color3.fromRGB(80, 80, 80)),
+            ColorSequenceKeypoint.new(0.5, Color3.fromRGB(15, 15, 15)),
+            ColorSequenceKeypoint.new(0.75, Color3.fromRGB(80, 80, 80)),
+            ColorSequenceKeypoint.new(1.0, Color3.fromRGB(15, 15, 15))
         })
         Gradient.Rotation = 90
         Gradient.Parent = DialogGlow
@@ -1433,7 +1429,7 @@ function Chloex:Window(GuiConfig)
         Message.Font = Enum.Font.Gotham
         Message.Text = "Do you want to close this window?\nYou will not be able to open it again"
         Message.TextSize = 14
-        Message.TextColor3 = Color3.fromRGB(220, 235, 255)
+        Message.TextColor3 = Color3.fromRGB(200, 200, 200)
         Message.TextWrapped = true
         Message.ZIndex = 52
         Message.Parent = Dialog
@@ -1442,7 +1438,7 @@ function Chloex:Window(GuiConfig)
         Yes.Size = UDim2.new(0.45, -10, 0, 35)
         Yes.Position = UDim2.new(0.05, 0, 1, -55)
         Yes.BackgroundColor3 = THEME.TopBarBG
-        Yes.BackgroundTransparency = 0.5
+        Yes.BackgroundTransparency = 0.2
         Yes.Text = "Yes"
         Yes.Font = Enum.Font.GothamBold
         Yes.TextSize = 15
@@ -1456,8 +1452,8 @@ function Chloex:Window(GuiConfig)
         local Cancel = Instance.new("TextButton")
         Cancel.Size = UDim2.new(0.45, -10, 0, 35)
         Cancel.Position = UDim2.new(0.5, 10, 1, -55)
-        Cancel.BackgroundColor3 = Color3.fromRGB(200, 215, 240)
-        Cancel.BackgroundTransparency = 0.5
+        Cancel.BackgroundColor3 = Color3.fromRGB(220, 220, 220)
+        Cancel.BackgroundTransparency = 0.2
         Cancel.Text = "Cancel"
         Cancel.Font = Enum.Font.GothamBold
         Cancel.TextSize = 15
@@ -1574,7 +1570,7 @@ function Chloex:Window(GuiConfig)
     DropShadowHolder1.Parent = MoreBlur
 
     DropShadow1.Image = "rbxassetid://6015897843"
-    DropShadow1.ImageColor3 = Color3.fromRGB(180, 210, 240)
+    DropShadow1.ImageColor3 = Color3.fromRGB(140, 140, 140)
     DropShadow1.ImageTransparency = 0.5
     DropShadow1.ScaleType = Enum.ScaleType.Slice
     DropShadow1.SliceCenter = Rect.new(49, 49, 450, 450)
@@ -1609,7 +1605,6 @@ function Chloex:Window(GuiConfig)
     local DropPageLayout = Instance.new("UIPageLayout");
 
     DropdownSelect.AnchorPoint = Vector2.new(1, 0.5)
-    -- Dropdown popup: putih kebiruan
     DropdownSelect.BackgroundColor3 = THEME.DropdownBG
     DropdownSelect.BorderColor3 = Color3.fromRGB(0, 0, 0)
     DropdownSelect.BorderSizePixel = 0
@@ -1637,7 +1632,7 @@ function Chloex:Window(GuiConfig)
     UIStroke14.Parent = DropdownSelect
 
     DropdownSelectReal.AnchorPoint = Vector2.new(0.5, 0.5)
-    DropdownSelectReal.BackgroundColor3 = Color3.fromRGB(210, 228, 255)
+    DropdownSelectReal.BackgroundColor3 = Color3.fromRGB(230, 230, 230)
     DropdownSelectReal.BackgroundTransparency = 0.3
     DropdownSelectReal.BorderColor3 = Color3.fromRGB(0, 0, 0)
     DropdownSelectReal.BorderSizePixel = 0
@@ -1693,7 +1688,6 @@ function Chloex:Window(GuiConfig)
         local UIStroke2 = Instance.new("UIStroke");
         local UICorner4 = Instance.new("UICorner");
 
-        -- Tab item background: biru muda
         Tab.BackgroundColor3 = THEME.TabItemBG
         if CountTab == 0 then
             Tab.BackgroundTransparency = 0.1
@@ -1723,7 +1717,6 @@ function Chloex:Window(GuiConfig)
         TabButton.Name = "TabButton"
         TabButton.Parent = Tab
 
-        -- Nama tab: hitam
         TabName.Font = Enum.Font.GothamBold
         TabName.Text = "[ " .. tostring(TabConfig.Name) .. " ]"
         TabName.TextColor3 = THEME.TabItemText
@@ -1866,7 +1859,6 @@ function Chloex:Window(GuiConfig)
             local SectionTitle = Instance.new("TextLabel");
 
             SectionReal.AnchorPoint = Vector2.new(0.5, 0)
-            -- Section background: biru muda
             SectionReal.BackgroundColor3 = THEME.SectionBG
             SectionReal.BackgroundTransparency = 0.1
             SectionReal.BorderColor3 = Color3.fromRGB(0, 0, 0)
@@ -1915,7 +1907,6 @@ function Chloex:Window(GuiConfig)
             FeatureImg.Name = "FeatureImg"
             FeatureImg.Parent = FeatureFrame
 
-            -- Judul section: hitam
             SectionTitle.Font = Enum.Font.GothamBold
             SectionTitle.Text = Title
             SectionTitle.TextColor3 = THEME.SectionText
@@ -1944,9 +1935,9 @@ function Chloex:Window(GuiConfig)
             UICorner1.Parent = SectionDecideFrame
 
             UIGradient.Color = ColorSequence.new {
-                ColorSequenceKeypoint.new(0, Color3.fromRGB(200, 220, 255)),
+                ColorSequenceKeypoint.new(0, Color3.fromRGB(180, 180, 180)),
                 ColorSequenceKeypoint.new(0.5, GuiConfig.Color),
-                ColorSequenceKeypoint.new(1, Color3.fromRGB(200, 220, 255))
+                ColorSequenceKeypoint.new(1, Color3.fromRGB(180, 180, 180))
             }
             UIGradient.Parent = SectionDecideFrame
 
@@ -2103,7 +2094,6 @@ function Chloex:Window(GuiConfig)
                     iconOffset = 30
                 end
 
-                -- Judul paragraph: hitam
                 ParagraphTitle.Font = Enum.Font.GothamBold
                 ParagraphTitle.Text = ParagraphConfig.Title
                 ParagraphTitle.TextColor3 = THEME.ItemTitle
@@ -2116,7 +2106,6 @@ function Chloex:Window(GuiConfig)
                 ParagraphTitle.Name = "ParagraphTitle"
                 ParagraphTitle.Parent = Paragraph
 
-                -- Konten paragraph: abu gelap
                 ParagraphContent.Font = Enum.Font.Gotham
                 ParagraphContent.Text = ParagraphConfig.Content
                 ParagraphContent.TextColor3 = THEME.ItemContent
@@ -2262,7 +2251,7 @@ function Chloex:Window(GuiConfig)
                     InputBox = Instance.new("TextBox")
                     InputBox.Font = Enum.Font.GothamBold
                     InputBox.PlaceholderText = PanelConfig.Placeholder
-                    InputBox.PlaceholderColor3 = Color3.fromRGB(100, 130, 180)
+                    InputBox.PlaceholderColor3 = Color3.fromRGB(140, 140, 140)
                     InputBox.Text = PanelConfig.Default
                     InputBox.TextSize = 11
                     InputBox.TextColor3 = THEME.InputText
@@ -2449,7 +2438,6 @@ function Chloex:Window(GuiConfig)
                 UICorner20.CornerRadius = UDim.new(0, 4)
                 UICorner20.Parent = Toggle
 
-                -- Toggle judul: hitam
                 ToggleTitle.Font = Enum.Font.GothamBold
                 ToggleTitle.Text = ToggleConfig.Title
                 ToggleTitle.TextSize = 13
@@ -2475,7 +2463,6 @@ function Chloex:Window(GuiConfig)
                 ToggleTitle2.Name = "ToggleTitle2"
                 ToggleTitle2.Parent = Toggle
 
-                -- Toggle konten: abu
                 ToggleContent.Font = Enum.Font.GothamBold
                 ToggleContent.Text = ToggleConfig.Content
                 ToggleContent.TextColor3 = THEME.ItemContent
@@ -2528,7 +2515,7 @@ function Chloex:Window(GuiConfig)
                 ToggleButton.Parent = Toggle
 
                 FeatureFrame2.AnchorPoint = Vector2.new(1, 0.5)
-                FeatureFrame2.BackgroundColor3 = Color3.fromRGB(200, 215, 235)
+                FeatureFrame2.BackgroundColor3 = Color3.fromRGB(210, 210, 210)
                 FeatureFrame2.BackgroundTransparency = 0.1
                 FeatureFrame2.BorderSizePixel = 0
                 FeatureFrame2.Position = UDim2.new(1, -15, 0.5, 0)
@@ -2538,12 +2525,12 @@ function Chloex:Window(GuiConfig)
 
                 UICorner22.Parent = FeatureFrame2
 
-                UIStroke8.Color = Color3.fromRGB(150, 180, 220)
+                UIStroke8.Color = Color3.fromRGB(160, 160, 160)
                 UIStroke8.Thickness = 2
                 UIStroke8.Transparency = 0.3
                 UIStroke8.Parent = FeatureFrame2
 
-                ToggleCircle.BackgroundColor3 = Color3.fromRGB(150, 180, 220)
+                ToggleCircle.BackgroundColor3 = Color3.fromRGB(160, 160, 160)
                 ToggleCircle.BorderSizePixel = 0
                 ToggleCircle.Size = UDim2.new(0, 14, 0, 14)
                 ToggleCircle.Name = "ToggleCircle"
@@ -2571,23 +2558,18 @@ function Chloex:Window(GuiConfig)
                         if not noSave then QueueSaveConfig() end
                     end
                     if Value then
-                        -- Toggle aktif: judul jadi biru, lingkaran biru
                         TweenService:Create(ToggleTitle, TweenInfo.new(0.2), { TextColor3 = GuiConfig.Color }):Play()
-                        TweenService:Create(ToggleCircle, TweenInfo.new(0.2), { Position = UDim2.new(0, 15, 0, 0) })
-                            :Play()
-                        TweenService:Create(UIStroke8, TweenInfo.new(0.2), { Color = GuiConfig.Color, Transparency = 0 })
-                            :Play()
+                        TweenService:Create(ToggleCircle, TweenInfo.new(0.2), { Position = UDim2.new(0, 15, 0, 0) }):Play()
+                        TweenService:Create(UIStroke8, TweenInfo.new(0.2), { Color = GuiConfig.Color, Transparency = 0 }):Play()
                         TweenService:Create(FeatureFrame2, TweenInfo.new(0.2),
                             { BackgroundColor3 = GuiConfig.Color, BackgroundTransparency = 0 }):Play()
                     else
-                        -- Toggle mati: kembali ke abu
-                        TweenService:Create(ToggleTitle, TweenInfo.new(0.2),
-                            { TextColor3 = THEME.ItemTitle }):Play()
+                        TweenService:Create(ToggleTitle, TweenInfo.new(0.2), { TextColor3 = THEME.ItemTitle }):Play()
                         TweenService:Create(ToggleCircle, TweenInfo.new(0.2), { Position = UDim2.new(0, 0, 0, 0) }):Play()
                         TweenService:Create(UIStroke8, TweenInfo.new(0.2),
-                            { Color = Color3.fromRGB(150, 180, 220), Transparency = 0.3 }):Play()
+                            { Color = Color3.fromRGB(160, 160, 160), Transparency = 0.3 }):Play()
                         TweenService:Create(FeatureFrame2, TweenInfo.new(0.2),
-                            { BackgroundColor3 = Color3.fromRGB(200, 215, 235), BackgroundTransparency = 0.1 }):Play()
+                            { BackgroundColor3 = Color3.fromRGB(210, 210, 210), BackgroundTransparency = 0.1 }):Play()
                     end
                 end
 
@@ -2657,7 +2639,6 @@ function Chloex:Window(GuiConfig)
                 UICorner15.CornerRadius = UDim.new(0, 4)
                 UICorner15.Parent = Slider
 
-                -- Slider judul: hitam
                 SliderTitle.Font = Enum.Font.GothamBold
                 SliderTitle.Text = SliderConfig.Title
                 SliderTitle.TextColor3 = THEME.ItemTitle
@@ -2673,7 +2654,6 @@ function Chloex:Window(GuiConfig)
                 SliderTitle.Name = "SliderTitle"
                 SliderTitle.Parent = Slider
 
-                -- Slider konten: abu
                 SliderContent.Font = Enum.Font.GothamBold
                 SliderContent.Text = SliderConfig.Content
                 SliderContent.TextColor3 = THEME.ItemContent
@@ -2717,7 +2697,6 @@ function Chloex:Window(GuiConfig)
                 UICorner16.CornerRadius = UDim.new(0, 2)
                 UICorner16.Parent = SliderInput
 
-                -- TextBox slider: teks hitam, background biru muda
                 TextBox.Font = Enum.Font.GothamBold
                 TextBox.Text = "90"
                 TextBox.TextColor3 = THEME.ItemTitle
@@ -2731,9 +2710,8 @@ function Chloex:Window(GuiConfig)
                 TextBox.Size = UDim2.new(1, 0, 1, 0)
                 TextBox.Parent = SliderInput
 
-                -- Slider track: biru muda
                 SliderFrame.AnchorPoint = Vector2.new(1, 0.5)
-                SliderFrame.BackgroundColor3 = Color3.fromRGB(180, 210, 240)
+                SliderFrame.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
                 SliderFrame.BackgroundTransparency = 0.3
                 SliderFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
                 SliderFrame.BorderSizePixel = 0
@@ -2929,7 +2907,6 @@ function Chloex:Window(GuiConfig)
                 UICorner12.CornerRadius = UDim.new(0, 4)
                 UICorner12.Parent = Input
 
-                -- Input judul: hitam
                 InputTitle.Font = Enum.Font.GothamBold
                 InputTitle.Text = InputConfig.Title or "TextBox"
                 InputTitle.TextColor3 = THEME.ItemTitle
@@ -2945,7 +2922,6 @@ function Chloex:Window(GuiConfig)
                 InputTitle.Name = "InputTitle"
                 InputTitle.Parent = Input
 
-                -- Input konten: abu
                 InputContent.Font = Enum.Font.GothamBold
                 InputContent.Text = InputConfig.Content or "This is a TextBox"
                 InputContent.TextColor3 = THEME.ItemContent
@@ -2977,7 +2953,6 @@ function Chloex:Window(GuiConfig)
                     UpdateSizeSection()
                 end)
 
-                -- Input box: background biru muda, teks hitam
                 InputFrame.AnchorPoint = Vector2.new(1, 0.5)
                 InputFrame.BackgroundColor3 = THEME.InputBG
                 InputFrame.BackgroundTransparency = 0.1
@@ -2994,7 +2969,7 @@ function Chloex:Window(GuiConfig)
 
                 InputTextBox.CursorPosition = -1
                 InputTextBox.Font = Enum.Font.GothamBold
-                InputTextBox.PlaceholderColor3 = Color3.fromRGB(100, 130, 180)
+                InputTextBox.PlaceholderColor3 = Color3.fromRGB(140, 140, 140)
                 InputTextBox.PlaceholderText = InputConfig.Placeholder
                 InputTextBox.Text = InputConfig.Default
                 InputTextBox.TextColor3 = THEME.InputText
@@ -3077,7 +3052,6 @@ function Chloex:Window(GuiConfig)
                 UICorner10.CornerRadius = UDim.new(0, 4)
                 UICorner10.Parent = Dropdown
 
-                -- Dropdown judul: hitam
                 DropdownTitle.Font = Enum.Font.GothamBold
                 DropdownTitle.Text = DropdownConfig.Title
                 DropdownTitle.TextColor3 = THEME.ItemTitle
@@ -3089,7 +3063,6 @@ function Chloex:Window(GuiConfig)
                 DropdownTitle.Name = "DropdownTitle"
                 DropdownTitle.Parent = Dropdown
 
-                -- Dropdown konten: abu
                 DropdownContent.Font = Enum.Font.GothamBold
                 DropdownContent.Text = DropdownConfig.Content
                 DropdownContent.TextColor3 = THEME.ItemContent
@@ -3120,12 +3093,10 @@ function Chloex:Window(GuiConfig)
                         MoreBlur.Visible = true
                         DropPageLayout:JumpToIndex(SelectOptionsFrame.LayoutOrder)
                         TweenService:Create(MoreBlur, TweenInfo.new(0.3), { BackgroundTransparency = 1 }):Play()
-                        TweenService:Create(DropdownSelect, TweenInfo.new(0.3), { Position = UDim2.new(1, -11, 0.5, 0) })
-                            :Play()
+                        TweenService:Create(DropdownSelect, TweenInfo.new(0.3), { Position = UDim2.new(1, -11, 0.5, 0) }):Play()
                     end
                 end)
 
-                -- Dropdown teks pilihan: abu gelap
                 OptionSelecting.Font = Enum.Font.GothamBold
                 OptionSelecting.Text = DropdownConfig.Multi and "Select Options" or "Select Option"
                 OptionSelecting.TextColor3 = THEME.ItemContent
@@ -3153,7 +3124,6 @@ function Chloex:Window(GuiConfig)
                 DropdownContainer.BackgroundTransparency = 1
                 DropdownContainer.Parent = DropdownFolder
 
-                -- Dropdown search: teks hitam
                 local SearchBox = Instance.new("TextBox")
                 SearchBox.PlaceholderText = "Search"
                 SearchBox.Font = Enum.Font.Gotham
@@ -3257,7 +3227,6 @@ function Chloex:Window(GuiConfig)
                     OptionButton.Name = "OptionButton"
                     OptionButton.Parent = Option
 
-                    -- Teks opsi dropdown: hitam
                     OptionText.Font = Enum.Font.GothamBold
                     OptionText.Text = label
                     OptionText.TextSize = 13
@@ -3326,8 +3295,7 @@ function Chloex:Window(GuiConfig)
                                 if selected then
                                     TweenService:Create(Drop.ChooseFrame, TweenInfo.new(0.2),
                                         { Size = UDim2.new(0, 1, 0, 12) }):Play()
-                                    TweenService:Create(Drop.ChooseFrame.UIStroke, TweenInfo.new(0.2), { Transparency = 0 })
-                                        :Play()
+                                    TweenService:Create(Drop.ChooseFrame.UIStroke, TweenInfo.new(0.2), { Transparency = 0 }):Play()
                                     TweenService:Create(Drop, TweenInfo.new(0.2), { BackgroundColor3 = THEME.ItemBG, BackgroundTransparency = 0.1 }):Play()
                                     table.insert(texts, Drop.OptionText.Text)
                                 else
@@ -3470,7 +3438,7 @@ function Chloex:Window(GuiConfig)
                         elseif value then
                             GuiFunc:SetAutoLoad("")
                             if AutoToggle then AutoToggle:Set(false, true) end
-                            than("Select a config first", 4, Color3.fromRGB(200, 130, 0), "HexRoot Hub", "Config")
+                            than("Select a config first", 4, Color3.fromRGB(120, 120, 120), "HexRoot Hub", "Config")
                         else
                             GuiFunc:SetAutoLoad("")
                         end
@@ -3557,9 +3525,9 @@ function Chloex:Window(GuiConfig)
                 else
                     local Grad = Instance.new("UIGradient")
                     Grad.Color = ColorSequence.new {
-                        ColorSequenceKeypoint.new(0, Color3.fromRGB(200, 220, 255)),
+                        ColorSequenceKeypoint.new(0, Color3.fromRGB(180, 180, 180)),
                         ColorSequenceKeypoint.new(0.5, GuiConfig.Color),
-                        ColorSequenceKeypoint.new(1, Color3.fromRGB(200, 220, 255))
+                        ColorSequenceKeypoint.new(1, Color3.fromRGB(180, 180, 180))
                     }
                     Grad.Rotation = 25
                     Grad.Parent = Banner
@@ -3637,7 +3605,6 @@ function Chloex:Window(GuiConfig)
                     cx = 52
                 end
 
-                -- Card judul: hitam
                 local CardTitle = Instance.new("TextLabel")
                 CardTitle.Font = Enum.Font.GothamBold
                 CardTitle.Text = CardConfig.Title
@@ -3649,7 +3616,6 @@ function Chloex:Window(GuiConfig)
                 CardTitle.Size = UDim2.new(1, -cx - 12, 0, 16)
                 CardTitle.Parent = Card
 
-                -- Card deskripsi: abu
                 local CardDesc = Instance.new("TextLabel")
                 CardDesc.Font = Enum.Font.Gotham
                 CardDesc.Text = CardConfig.Description
@@ -3712,15 +3678,15 @@ function Chloex:Window(GuiConfig)
                 Divider.Position = UDim2.new(0.5, 0, 0, 0)
                 Divider.Size = UDim2.new(1, 0, 0, 2)
                 Divider.BackgroundColor3 = THEME.TopBarBG
-                Divider.BackgroundTransparency = 0.5
+                Divider.BackgroundTransparency = 0.7
                 Divider.BorderSizePixel = 0
                 Divider.LayoutOrder = CountItem
 
                 local UIGradient = Instance.new("UIGradient")
                 UIGradient.Color = ColorSequence.new {
-                    ColorSequenceKeypoint.new(0, Color3.fromRGB(200, 220, 255)),
+                    ColorSequenceKeypoint.new(0, Color3.fromRGB(200, 200, 200)),
                     ColorSequenceKeypoint.new(0.5, GuiConfig.Color),
-                    ColorSequenceKeypoint.new(1, Color3.fromRGB(200, 220, 255))
+                    ColorSequenceKeypoint.new(1, Color3.fromRGB(200, 200, 200))
                 }
                 UIGradient.Parent = Divider
 
@@ -3750,7 +3716,6 @@ function Chloex:Window(GuiConfig)
                 Background.BorderSizePixel = 0
                 Instance.new("UICorner", Background).CornerRadius = UDim.new(0, 6)
 
-                -- SubSection teks: biru gelap
                 local Label = Instance.new("TextLabel")
                 Label.Parent = SubSection
                 Label.AnchorPoint = Vector2.new(0, 0.5)
