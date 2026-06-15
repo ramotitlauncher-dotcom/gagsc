@@ -1,18 +1,18 @@
 local HttpService = game:GetService("HttpService")
 
-if not isfolder("HexRoot Hub") then
-    makefolder("HexRoot Hub")
+if not isfolder("WisHub") then
+    makefolder("WisHub")
 end
-if not isfolder("HexRoot Hub/Config") then
-    makefolder("HexRoot Hub/Config")
+if not isfolder("WisHub/Config") then
+    makefolder("WisHub/Config")
 end
 
 local gameName   = tostring(game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name)
 gameName         = gameName:gsub("[^%w_ ]", "")
 gameName         = gameName:gsub("%s+", "_")
 
-local ConfigFile = "HexRoot Hub/Config/" .. gameName .. ".json"
-local ConfigFolder = "HexRoot Hub/Configs"
+local ConfigFile = "WisHub/Config/" .. gameName .. ".json"
+local ConfigFolder = "WisHub/Configs"
 local GameConfigFolder = ConfigFolder .. "/" .. gameName
 
 ConfigData       = {}
@@ -140,7 +140,7 @@ function LoadConfigElements()
 end
 
 local Icons = {
-    player    = "rbxassetid://132110246390128",
+    player    = "rbxassetid://12120698352",
     web       = "rbxassetid://137601480983962",
     bag       = "rbxassetid://8601111810",
     shop      = "rbxassetid://4985385964",
@@ -315,7 +315,7 @@ function CircleClick(Button, X, Y)
     spawn(function()
         Button.ClipsDescendants = true
         local Circle = Instance.new("ImageLabel")
-        Circle.Image = "rbxassetid://132110246390128"
+        Circle.Image = "rbxassetid://266543268"
         Circle.ImageColor3 = Color3.fromRGB(80, 80, 80)
         Circle.ImageTransparency = 0.8999999761581421
         Circle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -350,7 +350,7 @@ end
 local Chloex = {}
 function Chloex:MakeNotify(NotifyConfig)
     local NotifyConfig = NotifyConfig or {}
-    NotifyConfig.Title = NotifyConfig.Title or "HexRoot Hub"
+    NotifyConfig.Title = NotifyConfig.Title or "WisHub"
     NotifyConfig.Description = NotifyConfig.Description or "Notification"
     NotifyConfig.Content = NotifyConfig.Content or "Content"
     NotifyConfig.Color = NotifyConfig.Color or Color3.fromRGB(255, 0, 255)
@@ -548,7 +548,7 @@ end
 
 function than(msg, delay, color, title, desc)
     return Chloex:MakeNotify({
-        Title = title or "HexRoot Hub",
+        Title = title or "WisHub",
         Description = desc or "Notification",
         Content = msg or "Content",
         Color = color or Color3.fromRGB(0, 208, 255),
@@ -558,7 +558,7 @@ end
 
 function Chloex:Window(GuiConfig)
     GuiConfig              = GuiConfig or {}
-    GuiConfig.Title        = GuiConfig.Title or "HexRoot Hub"
+    GuiConfig.Title        = GuiConfig.Title or "WisHub"
     GuiConfig.Footer       = GuiConfig.Footer or ""
     GuiConfig.Color        = GuiConfig.Color or Color3.fromRGB(255, 0, 255)
     GuiConfig["Tab Width"] = GuiConfig["Tab Width"] or 120
@@ -647,7 +647,7 @@ function Chloex:Window(GuiConfig)
 
     function GuiFunc:ExportConfig()
         local payload = HttpService:JSONEncode({
-            Hub = "HexRoot Hub",
+            Hub = "WisHub",
             Game = gameName,
             PlaceId = game.PlaceId,
             Version = CURRENT_VERSION,
@@ -657,38 +657,38 @@ function Chloex:Window(GuiConfig)
         })
         if setclipboard then
             setclipboard(payload)
-            than("Config copied to clipboard", 4, GuiConfig.Color, "HexRoot Hub", "Export")
+            than("Config copied to clipboard", 4, GuiConfig.Color, "WisHub", "Export")
         end
         return payload
     end
 
     function GuiFunc:ImportConfig(str)
         if not str or str == "" then
-            than("Paste a config string first", 4, Color3.fromRGB(255, 90, 90), "HexRoot Hub", "Import")
+            than("Paste a config string first", 4, Color3.fromRGB(255, 90, 90), "WisHub", "Import")
             return false
         end
         local ok, dec = pcall(function() return HttpService:JSONDecode(str) end)
         if not ok or type(dec) ~= "table" then
-            than("Invalid config format", 4, Color3.fromRGB(255, 90, 90), "HexRoot Hub", "Import")
+            than("Invalid config format", 4, Color3.fromRGB(255, 90, 90), "WisHub", "Import")
             return false
         end
         local data = ExtractConfigPayload(dec)
         if not data then
-            than("Config data is empty", 4, Color3.fromRGB(255, 90, 90), "HexRoot Hub", "Import")
+            than("Config data is empty", 4, Color3.fromRGB(255, 90, 90), "WisHub", "Import")
             return false
         end
 
         ApplyConfigData(data)
         QueueSaveConfig(AutoSaveEnabled)
-        than("Config imported", 4, GuiConfig.Color, "HexRoot Hub", "Import")
+        than("Config imported", 4, GuiConfig.Color, "WisHub", "Import")
         return true
     end
 
-    local ConfigFolder = "HexRoot Hub/Configs"
+    local ConfigFolder = "WisHub/Configs"
     local GameConfigFolder = ConfigFolder .. "/" .. gameName
 
     local function EnsureConfigFolder()
-        if not isfolder("HexRoot Hub") then makefolder("HexRoot Hub") end
+        if not isfolder("WisHub") then makefolder("WisHub") end
         if not isfolder(ConfigFolder) then makefolder(ConfigFolder) end
         if not isfolder(GameConfigFolder) then makefolder(GameConfigFolder) end
     end
@@ -708,7 +708,7 @@ function Chloex:Window(GuiConfig)
 
     function GuiFunc:SaveConfigAs(name)
         if not name or name == "" then
-            than("Enter a config name first", 4, Color3.fromRGB(255, 90, 90), "HexRoot Hub", "Config")
+            than("Enter a config name first", 4, Color3.fromRGB(255, 90, 90), "WisHub", "Config")
             return false
         end
         if not writefile then return false end
@@ -716,7 +716,7 @@ function Chloex:Window(GuiConfig)
         local path = GameConfigFolder .. "/" .. name .. ".json"
         writefile(path, HttpService:JSONEncode(GetConfigSnapshot()))
         SetActiveConfig(name, path, AutoSaveEnabled or GuiFunc:GetAutoLoad() == name, "saved")
-        than("Saved '" .. name .. "'", 4, GuiConfig.Color, "HexRoot Hub", "Config")
+        than("Saved '" .. name .. "'", 4, GuiConfig.Color, "WisHub", "Config")
         return true
     end
 
@@ -724,23 +724,23 @@ function Chloex:Window(GuiConfig)
         if not name or name == "" then return false end
         local path = GameConfigFolder .. "/" .. name .. ".json"
         if not (isfile and isfile(path)) then
-            than("Config '" .. tostring(name) .. "' not found", 4, Color3.fromRGB(255, 90, 90), "HexRoot Hub", "Config")
+            than("Config '" .. tostring(name) .. "' not found", 4, Color3.fromRGB(255, 90, 90), "WisHub", "Config")
             return false
         end
         local ok, dec = pcall(function() return HttpService:JSONDecode(readfile(path)) end)
         if not ok or type(dec) ~= "table" then
-            than("Failed to read config", 4, Color3.fromRGB(255, 90, 90), "HexRoot Hub", "Config")
+            than("Failed to read config", 4, Color3.fromRGB(255, 90, 90), "WisHub", "Config")
             return false
         end
         local data = ExtractConfigPayload(dec)
         if not data then
-            than("Config data is empty", 4, Color3.fromRGB(255, 90, 90), "HexRoot Hub", "Config")
+            than("Config data is empty", 4, Color3.fromRGB(255, 90, 90), "WisHub", "Config")
             return false
         end
 
         ApplyConfigData(data)
         SetActiveConfig(name, path, true, "manual")
-        than("Loaded '" .. name .. "'", 4, GuiConfig.Color, "HexRoot Hub", "Config")
+        than("Loaded '" .. name .. "'", 4, GuiConfig.Color, "WisHub", "Config")
         return true
     end
 
@@ -754,7 +754,7 @@ function Chloex:Window(GuiConfig)
             if GuiFunc:GetAutoLoad() == name then
                 GuiFunc:SetAutoLoad("")
             end
-            than("Deleted '" .. name .. "'", 4, Color3.fromRGB(255, 170, 0), "HexRoot Hub", "Config")
+            than("Deleted '" .. name .. "'", 4, Color3.fromRGB(255, 170, 0), "WisHub", "Config")
             return true
         end
         return false
@@ -936,7 +936,7 @@ function Chloex:Window(GuiConfig)
         DiscordBtn.Activated:Connect(function()
             if setclipboard then
                 setclipboard(GuiConfig.Discord)
-                than("Discord invite copied", 4, GuiConfig.Color, "HexRoot Hub", "Community")
+                than("Discord invite copied", 4, GuiConfig.Color, "WisHub", "Community")
             end
         end)
 
@@ -1365,7 +1365,7 @@ function Chloex:Window(GuiConfig)
         Title.Position = UDim2.new(0, 0, 0, 4)
         Title.BackgroundTransparency = 1
         Title.Font = Enum.Font.GothamBold
-        Title.Text = "HexRoot Hub Window"
+        Title.Text = "WisHub Window"
         Title.TextSize = 22
         Title.TextColor3 = Color3.fromRGB(255, 255, 255)
         Title.ZIndex = 52
@@ -3383,11 +3383,11 @@ function Chloex:Window(GuiConfig)
                         if initializingAutoToggle then return end
                         if value and selectedConfig then
                             GuiFunc:SetAutoLoad(selectedConfig)
-                            than("Auto load set to '" .. selectedConfig .. "'", 4, GuiConfig.Color, "HexRoot Hub", "Config")
+                            than("Auto load set to '" .. selectedConfig .. "'", 4, GuiConfig.Color, "WisHub", "Config")
                         elseif value then
                             GuiFunc:SetAutoLoad("")
                             if AutoToggle then AutoToggle:Set(false, true) end
-                            than("Select a config first", 4, Color3.fromRGB(255, 170, 0), "HexRoot Hub", "Config")
+                            than("Select a config first", 4, Color3.fromRGB(255, 170, 0), "WisHub", "Config")
                         else
                             GuiFunc:SetAutoLoad("")
                         end
@@ -3717,7 +3717,7 @@ function Chloex:Window(GuiConfig)
                         Callback = function()
                             if setclipboard then
                                 setclipboard(InfoConfig.DiscordLink)
-                                than("Discord invite copied", 4, GuiConfig.Color, "HexRoot Hub", "Community")
+                                than("Discord invite copied", 4, GuiConfig.Color, "WisHub", "Community")
                             end
                         end,
                     },
