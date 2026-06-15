@@ -741,7 +741,7 @@ local Window = UI:Window({
 	Footer = "by WisHub",
 	Color = Color3.fromRGB(100, 200, 255),
 	Version = 2,
-	Image = "132110246390128"
+	Image = "rbxassetid://132110246390128"
 })
 
 local FarmTab    = Window:AddTab({ Name = "Auto Farm",  Icon = "star"          })
