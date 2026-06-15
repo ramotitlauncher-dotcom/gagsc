@@ -301,18 +301,18 @@ local function grab(part, typ)
 			allSeedStatus.totalClaimed += 1
 			table.insert(grabLog, string.format("[%s] CLAIMED %s seed", formatTime(), typ))
 			if typ == "rainbow" then
-				than("🌈 Rainbow Seed berhasil diklaim!", 4, Color3.fromRGB(255, 100, 255), "WisHub", "Seed Collector")
+				than("🌈 Rainbow Seed berhasil diklaim!", 4, Color3.fromRGB(255, 100, 255), "HexRoot Hub", "Seed Collector")
 			elseif typ == "gold" then
-				than("⭐ Gold Seed berhasil diklaim!", 4, Color3.fromRGB(255, 215, 0), "WisHub", "Seed Collector")
+				than("⭐ Gold Seed berhasil diklaim!", 4, Color3.fromRGB(255, 215, 0), "HexRoot Hub", "Seed Collector")
 			end
 		else
 			statusData[typ].miss += 1
 			allSeedStatus.totalMiss += 1
 			table.insert(grabLog, string.format("[%s] MISS %s seed", formatTime(), typ))
 			if typ == "rainbow" then
-				than("❌ Gagal klaim Rainbow Seed", 3, Color3.fromRGB(255, 80, 80), "WisHub", "Seed Collector")
+				than("❌ Gagal klaim Rainbow Seed", 3, Color3.fromRGB(255, 80, 80), "HexRoot Hub", "Seed Collector")
 			elseif typ == "gold" then
-				than("❌ Gagal klaim Gold Seed", 3, Color3.fromRGB(255, 80, 80), "WisHub", "Seed Collector")
+				than("❌ Gagal klaim Gold Seed", 3, Color3.fromRGB(255, 80, 80), "HexRoot Hub", "Seed Collector")
 			end
 		end
 		if #grabLog > 50 then table.remove(grabLog, 1) end
@@ -364,14 +364,14 @@ spawnLocations.ChildAdded:Connect(function(part)
 			statusData.rainbow.lastSeen = formatTime()
 			statusData.rainbow.waiting = true
 			updateStatusLabel("rainbow")
-			than("🌈 Rainbow Seed terdeteksi!", 3, Color3.fromRGB(255, 100, 255), "WisHub", "Seed Collector")
+			than("🌈 Rainbow Seed terdeteksi!", 3, Color3.fromRGB(255, 100, 255), "HexRoot Hub", "Seed Collector")
 			if autoRainbow then grab(part, "rainbow") end
 		end
 		if isGold then
 			statusData.gold.lastSeen = formatTime()
 			statusData.gold.waiting = true
 			updateStatusLabel("gold")
-			than("⭐ Gold Seed terdeteksi!", 3, Color3.fromRGB(255, 215, 0), "WisHub", "Seed Collector")
+			than("⭐ Gold Seed terdeteksi!", 3, Color3.fromRGB(255, 215, 0), "HexRoot Hub", "Seed Collector")
 			if autoGold then grab(part, "gold") end
 		end
 		if not isRainbow and not isGold then
@@ -381,7 +381,7 @@ spawnLocations.ChildAdded:Connect(function(part)
 					statusData.rainbow.lastSeen = formatTime()
 					statusData.rainbow.waiting = true
 					updateStatusLabel("rainbow")
-					than("🌈 Rainbow Seed terdeteksi!", 3, Color3.fromRGB(255, 100, 255), "WisHub", "Seed Collector")
+					than("🌈 Rainbow Seed terdeteksi!", 3, Color3.fromRGB(255, 100, 255), "HexRoot Hub", "Seed Collector")
 					if autoRainbow then grab(part, "rainbow") end
 					c1:Disconnect()
 				end
@@ -391,7 +391,7 @@ spawnLocations.ChildAdded:Connect(function(part)
 					statusData.gold.lastSeen = formatTime()
 					statusData.gold.waiting = true
 					updateStatusLabel("gold")
-					than("⭐ Gold Seed terdeteksi!", 3, Color3.fromRGB(255, 215, 0), "WisHub", "Seed Collector")
+					than("⭐ Gold Seed terdeteksi!", 3, Color3.fromRGB(255, 215, 0), "HexRoot Hub", "Seed Collector")
 					if autoGold then grab(part, "gold") end
 					c2:Disconnect()
 				end
@@ -469,7 +469,7 @@ task.spawn(function()
 			local now = os.clock()
 			if now - lastSellNotif >= 10 then
 				lastSellNotif = now
-				than("💰 Auto Sell berjalan", 2, Color3.fromRGB(100, 255, 100), "WisHub", "Sell")
+				than("💰 Auto Sell berjalan", 2, Color3.fromRGB(100, 255, 100), "HexRoot Hub", "Sell")
 			end
 		end
 	end
@@ -632,7 +632,7 @@ task.spawn(function()
 						end
 					end
 					if countAfter > countBefore then
-						than("🛒 Berhasil membeli: " .. seedName, 3, Color3.fromRGB(100, 200, 255), "WisHub", "Shop")
+						than("🛒 Berhasil membeli: " .. seedName, 3, Color3.fromRGB(100, 200, 255), "HexRoot Hub", "Shop")
 					end
 					task.wait(0.1)
 				end
@@ -670,7 +670,7 @@ task.spawn(function()
 			if not autoTame then break end
 			if not isAlive() then break end
 			networking.Pets.WildPetTame:Fire(part)
-			than("🐾 Berhasil menjinakkan: " .. petName, 3, Color3.fromRGB(255, 180, 100), "WisHub", "Pet")
+			than("🐾 Berhasil menjinakkan: " .. petName, 3, Color3.fromRGB(255, 180, 100), "HexRoot Hub", "Pet")
 			task.wait(0.2)
 		end
 	end
@@ -774,9 +774,9 @@ SeedSection:AddToggle({
 		updateStatusLabel("rainbow")
 		if val then
 			scanExisting()
-			than("🌈 Auto Collect Rainbow Seed: ON", 3, Color3.fromRGB(255, 100, 255), "WisHub", "Seed Collector")
+			than("🌈 Auto Collect Rainbow Seed: ON", 3, Color3.fromRGB(255, 100, 255), "HexRoot Hub", "Seed Collector")
 		else
-			than("🌈 Auto Collect Rainbow Seed: OFF", 3, Color3.fromRGB(200, 200, 200), "WisHub", "Seed Collector")
+			than("🌈 Auto Collect Rainbow Seed: OFF", 3, Color3.fromRGB(200, 200, 200), "HexRoot Hub", "Seed Collector")
 		end
 	end
 })
@@ -796,9 +796,9 @@ SeedSection:AddToggle({
 		updateStatusLabel("gold")
 		if val then
 			scanExisting()
-			than("⭐ Auto Collect Gold Seed: ON", 3, Color3.fromRGB(255, 215, 0), "WisHub", "Seed Collector")
+			than("⭐ Auto Collect Gold Seed: ON", 3, Color3.fromRGB(255, 215, 0), "HexRoot Hub", "Seed Collector")
 		else
-			than("⭐ Auto Collect Gold Seed: OFF", 3, Color3.fromRGB(200, 200, 200), "WisHub", "Seed Collector")
+			than("⭐ Auto Collect Gold Seed: OFF", 3, Color3.fromRGB(200, 200, 200), "HexRoot Hub", "Seed Collector")
 		end
 	end
 })
@@ -825,7 +825,7 @@ SeedSection:AddButton({
 			if part:GetAttribute("GoldSeed")    == true then grab(part, "gold") found = true end
 		end
 		if not found then
-			than("⚠️ Tidak ada seed spesial ditemukan", 3, Color3.fromRGB(255, 200, 0), "WisHub", "Seed Collector")
+			than("⚠️ Tidak ada seed spesial ditemukan", 3, Color3.fromRGB(255, 200, 0), "HexRoot Hub", "Seed Collector")
 		end
 	end,
 	SubCallback = function()
@@ -843,9 +843,9 @@ FruitSection:AddToggle({
 	Callback = function(val)
 		autoFruit = val
 		if val then
-			than("🍎 Auto Collect Fruit: ON", 3, Color3.fromRGB(100, 255, 150), "WisHub", "Fruit")
+			than("🍎 Auto Collect Fruit: ON", 3, Color3.fromRGB(100, 255, 150), "HexRoot Hub", "Fruit")
 		else
-			than("🍎 Auto Collect Fruit: OFF", 3, Color3.fromRGB(200, 200, 200), "WisHub", "Fruit")
+			than("🍎 Auto Collect Fruit: OFF", 3, Color3.fromRGB(200, 200, 200), "HexRoot Hub", "Fruit")
 		end
 	end
 })
@@ -856,9 +856,9 @@ FruitSection:AddToggle({
 	Callback = function(val)
 		instantCollect = val
 		if val then
-			than("⚡ Instant Collect: ON", 3, Color3.fromRGB(255, 255, 100), "WisHub", "Fruit")
+			than("⚡ Instant Collect: ON", 3, Color3.fromRGB(255, 255, 100), "HexRoot Hub", "Fruit")
 		else
-			than("⚡ Instant Collect: OFF", 3, Color3.fromRGB(200, 200, 200), "WisHub", "Fruit")
+			than("⚡ Instant Collect: OFF", 3, Color3.fromRGB(200, 200, 200), "HexRoot Hub", "Fruit")
 		end
 	end
 })
@@ -878,9 +878,9 @@ SellSection:AddToggle({
 	Callback = function(val)
 		autoSell = val
 		if val then
-			than("💰 Auto Sell: ON", 3, Color3.fromRGB(100, 255, 100), "WisHub", "Sell")
+			than("💰 Auto Sell: ON", 3, Color3.fromRGB(100, 255, 100), "HexRoot Hub", "Sell")
 		else
-			than("💰 Auto Sell: OFF", 3, Color3.fromRGB(200, 200, 200), "WisHub", "Sell")
+			than("💰 Auto Sell: OFF", 3, Color3.fromRGB(200, 200, 200), "HexRoot Hub", "Sell")
 		end
 	end
 })
@@ -889,7 +889,7 @@ SellSection:AddButton({
 	Title    = "Sell Once",
 	Callback = function()
 		networking.NPCS.SellAll:Fire()
-		than("💰 Semua item berhasil dijual!", 3, Color3.fromRGB(100, 255, 100), "WisHub", "Sell")
+		than("💰 Semua item berhasil dijual!", 3, Color3.fromRGB(100, 255, 100), "HexRoot Hub", "Sell")
 	end
 })
 
@@ -899,9 +899,9 @@ PlantSection:AddToggle({
 	Callback = function(val)
 		autoPlant = val
 		if val then
-			than("🌱 Auto Plant: ON", 3, Color3.fromRGB(100, 220, 100), "WisHub", "Plant")
+			than("🌱 Auto Plant: ON", 3, Color3.fromRGB(100, 220, 100), "HexRoot Hub", "Plant")
 		else
-			than("🌱 Auto Plant: OFF", 3, Color3.fromRGB(200, 200, 200), "WisHub", "Plant")
+			than("🌱 Auto Plant: OFF", 3, Color3.fromRGB(200, 200, 200), "HexRoot Hub", "Plant")
 		end
 	end
 })
@@ -912,9 +912,9 @@ PlantSection:AddToggle({
 	Callback = function(val)
 		autoPlantAll = val
 		if val then
-			than("🌱 Auto Plant All: ON", 3, Color3.fromRGB(100, 220, 100), "WisHub", "Plant")
+			than("🌱 Auto Plant All: ON", 3, Color3.fromRGB(100, 220, 100), "HexRoot Hub", "Plant")
 		else
-			than("🌱 Auto Plant All: OFF", 3, Color3.fromRGB(200, 200, 200), "WisHub", "Plant")
+			than("🌱 Auto Plant All: OFF", 3, Color3.fromRGB(200, 200, 200), "HexRoot Hub", "Plant")
 		end
 	end
 })
@@ -941,7 +941,7 @@ PlantSection:AddButton({
 	Callback = function()
 		local tool = getEquippedSeedTool(selectedPlantSeed)
 		if not tool then
-			than("⚠️ Tool tidak ditemukan: " .. selectedPlantSeed, 3, Color3.fromRGB(255, 80, 80), "WisHub", "Plant")
+			than("⚠️ Tool tidak ditemukan: " .. selectedPlantSeed, 3, Color3.fromRGB(255, 80, 80), "HexRoot Hub", "Plant")
 			return
 		end
 		local plot = getPlayerPlot()
@@ -956,7 +956,7 @@ PlantSection:AddButton({
 				count += 1
 			end
 		end
-		than("🌱 Menanam " .. selectedPlantSeed .. " (" .. count .. " slot)", 3, Color3.fromRGB(100, 220, 100), "WisHub", "Plant")
+		than("🌱 Menanam " .. selectedPlantSeed .. " (" .. count .. " slot)", 3, Color3.fromRGB(100, 220, 100), "HexRoot Hub", "Plant")
 	end,
 	SubCallback = function()
 		local plot = getPlayerPlot()
@@ -968,7 +968,7 @@ PlantSection:AddButton({
 			if not isOccupied(pos, plantsFolder) then table.insert(emptySlots, pos) end
 		end
 		if #emptySlots == 0 then
-			than("⚠️ Tidak ada slot kosong", 3, Color3.fromRGB(255, 200, 0), "WisHub", "Plant")
+			than("⚠️ Tidak ada slot kosong", 3, Color3.fromRGB(255, 200, 0), "HexRoot Hub", "Plant")
 			return
 		end
 		local allTools = getAllSeedTools()
@@ -988,7 +988,7 @@ PlantSection:AddButton({
 			slotIdx += 1
 			count += 1
 		end
-		than("🌱 Plant All selesai (" .. count .. " seed ditanam)", 3, Color3.fromRGB(100, 220, 100), "WisHub", "Plant")
+		than("🌱 Plant All selesai (" .. count .. " seed ditanam)", 3, Color3.fromRGB(100, 220, 100), "HexRoot Hub", "Plant")
 	end
 })
 
@@ -998,9 +998,9 @@ ShopSection:AddToggle({
 	Callback = function(val)
 		autoBuySeed = val
 		if val then
-			than("🛒 Auto Buy Seed: ON", 3, Color3.fromRGB(100, 200, 255), "WisHub", "Shop")
+			than("🛒 Auto Buy Seed: ON", 3, Color3.fromRGB(100, 200, 255), "HexRoot Hub", "Shop")
 		else
-			than("🛒 Auto Buy Seed: OFF", 3, Color3.fromRGB(200, 200, 200), "WisHub", "Shop")
+			than("🛒 Auto Buy Seed: OFF", 3, Color3.fromRGB(200, 200, 200), "HexRoot Hub", "Shop")
 		end
 	end
 })
@@ -1035,13 +1035,13 @@ ShopSection:AddButton({
 		for seedName, enabled in pairs(selectedBuySeeds) do
 			if enabled then
 				networking.SeedShop.PurchaseSeed:Fire(seedName)
-				than("🛒 Berhasil membeli: " .. seedName, 3, Color3.fromRGB(100, 200, 255), "WisHub", "Shop")
+				than("🛒 Berhasil membeli: " .. seedName, 3, Color3.fromRGB(100, 200, 255), "HexRoot Hub", "Shop")
 				task.wait(0.1)
 				count += 1
 			end
 		end
 		if count == 0 then
-			than("⚠️ Belum ada seed yang dipilih", 3, Color3.fromRGB(255, 200, 0), "WisHub", "Shop")
+			than("⚠️ Belum ada seed yang dipilih", 3, Color3.fromRGB(255, 200, 0), "HexRoot Hub", "Shop")
 		end
 	end,
 	SubCallback = function() seedDropdown:Set(allSeeds) end
@@ -1051,7 +1051,7 @@ ShopSection:AddButton({
 	Title    = "Deselect All",
 	Callback = function()
 		seedDropdown:Set({})
-		than("🛒 Semua seed di-deselect", 2, Color3.fromRGB(200, 200, 200), "WisHub", "Shop")
+		than("🛒 Semua seed di-deselect", 2, Color3.fromRGB(200, 200, 200), "HexRoot Hub", "Shop")
 	end
 })
 
@@ -1061,9 +1061,9 @@ PetSection:AddToggle({
 	Callback = function(val)
 		autoTame = val
 		if val then
-			than("🐾 Auto Tame Pet: ON", 3, Color3.fromRGB(255, 180, 100), "WisHub", "Pet")
+			than("🐾 Auto Tame Pet: ON", 3, Color3.fromRGB(255, 180, 100), "HexRoot Hub", "Pet")
 		else
-			than("🐾 Auto Tame Pet: OFF", 3, Color3.fromRGB(200, 200, 200), "WisHub", "Pet")
+			than("🐾 Auto Tame Pet: OFF", 3, Color3.fromRGB(200, 200, 200), "HexRoot Hub", "Pet")
 		end
 	end
 })
@@ -1101,7 +1101,7 @@ PetSection:AddButton({
 	SubTitle = "Select All Pets",
 	Callback = function()
 		if not isAlive() then
-			than("⚠️ Karakter mati, tidak bisa tame", 3, Color3.fromRGB(255, 80, 80), "WisHub", "Pet")
+			than("⚠️ Karakter mati, tidak bisa tame", 3, Color3.fromRGB(255, 80, 80), "HexRoot Hub", "Pet")
 			return
 		end
 		local wildPetRef = workspace:FindFirstChild("Map") and workspace.Map:FindFirstChild("WildPetRef")
@@ -1125,11 +1125,11 @@ PetSection:AddButton({
 			end
 			if not isAlive() then break end
 			networking.Pets.WildPetTame:Fire(part)
-			than("🐾 Berhasil menjinakkan: " .. petName, 3, Color3.fromRGB(255, 180, 100), "WisHub", "Pet")
+			than("🐾 Berhasil menjinakkan: " .. petName, 3, Color3.fromRGB(255, 180, 100), "HexRoot Hub", "Pet")
 			task.wait(0.2)
 			count += 1
 		end
-		than("🐾 Selesai! Total " .. count .. " pet dijinakkan", 4, Color3.fromRGB(255, 180, 100), "WisHub", "Pet")
+		than("🐾 Selesai! Total " .. count .. " pet dijinakkan", 4, Color3.fromRGB(255, 180, 100), "HexRoot Hub", "Pet")
 	end,
 	SubCallback = function() petDropdown:Set(allPets) end
 })
@@ -1167,10 +1167,10 @@ MovementSection:AddToggle({
 		flyEnabled = val
 		if val then
 			startFly()
-			than("✈️ Fly: ON (Speed: " .. flySpeed .. ")", 3, Color3.fromRGB(100, 200, 255), "WisHub", "Movement")
+			than("✈️ Fly: ON (Speed: " .. flySpeed .. ")", 3, Color3.fromRGB(100, 200, 255), "HexRoot Hub", "Movement")
 		else
 			stopFly()
-			than("✈️ Fly: OFF", 3, Color3.fromRGB(200, 200, 200), "WisHub", "Movement")
+			than("✈️ Fly: OFF", 3, Color3.fromRGB(200, 200, 200), "HexRoot Hub", "Movement")
 		end
 	end
 })
@@ -1191,10 +1191,10 @@ MovementSection:AddToggle({
 		noclipEnabled = val
 		if val then
 			startNoclip()
-			than("👻 Noclip: ON", 3, Color3.fromRGB(200, 150, 255), "WisHub", "Movement")
+			than("👻 Noclip: ON", 3, Color3.fromRGB(200, 150, 255), "HexRoot Hub", "Movement")
 		else
 			stopNoclip()
-			than("👻 Noclip: OFF", 3, Color3.fromRGB(200, 200, 200), "WisHub", "Movement")
+			than("👻 Noclip: OFF", 3, Color3.fromRGB(200, 200, 200), "HexRoot Hub", "Movement")
 		end
 	end
 })
@@ -1205,9 +1205,9 @@ MovementSection:AddToggle({
 	Callback = function(val)
 		infiniteJump = val
 		if val then
-			than("🦘 Infinite Jump: ON", 3, Color3.fromRGB(255, 220, 100), "WisHub", "Movement")
+			than("🦘 Infinite Jump: ON", 3, Color3.fromRGB(255, 220, 100), "HexRoot Hub", "Movement")
 		else
-			than("🦘 Infinite Jump: OFF", 3, Color3.fromRGB(200, 200, 200), "WisHub", "Movement")
+			than("🦘 Infinite Jump: OFF", 3, Color3.fromRGB(200, 200, 200), "HexRoot Hub", "Movement")
 		end
 	end
 })
@@ -1246,18 +1246,18 @@ MiscSection:AddButton({
 		for _, part in ipairs(spawnLocations:GetChildren()) do
 			if part:GetAttribute("RainbowSeed") == true or part:GetAttribute("GoldSeed") == true then
 				grab(part, nil)
-				than("🚀 Teleport ke seed spesial!", 3, Color3.fromRGB(100, 200, 255), "WisHub", "Misc")
+				than("🚀 Teleport ke seed spesial!", 3, Color3.fromRGB(100, 200, 255), "HexRoot Hub", "Misc")
 				return
 			end
 		end
-		than("⚠️ Tidak ada seed spesial saat ini", 3, Color3.fromRGB(255, 200, 0), "WisHub", "Misc")
+		than("⚠️ Tidak ada seed spesial saat ini", 3, Color3.fromRGB(255, 200, 0), "HexRoot Hub", "Misc")
 	end
 })
 
 MiscSection:AddButton({
 	Title    = "Rejoin Server",
 	Callback = function()
-		than("🔄 Rejoining server...", 3, Color3.fromRGB(200, 200, 200), "WisHub", "Misc")
+		than("🔄 Rejoining server...", 3, Color3.fromRGB(200, 200, 200), "HexRoot Hub", "Misc")
 		task.wait(1)
 		game:GetService("TeleportService"):Teleport(game.PlaceId, LocalPlayer)
 	end
