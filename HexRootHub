@@ -741,7 +741,7 @@ local Window = UI:Window({
 	Footer = "( ninjah putih )",
 	Color = Color3.fromRGB(100, 200, 255),
 	Version = 2,
-	Image = "rbxassetid://110581774864786"
+	Image = "110581774864786"
 })
 
 local FarmTab    = Window:AddTab({ Name = "Auto Farm",  Icon = "star"          })
