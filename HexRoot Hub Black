@@ -1,4 +1,4 @@
-local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/ramotitlauncher-dotcom/gagsc/refs/heads/main/UI"))()
+local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/ramotitlauncher-dotcom/gagsc/refs/heads/main/UIHITAM"))()
 
 local RS = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
