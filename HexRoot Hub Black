@@ -1,0 +1,1338 @@
+local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/ramotitlauncher-dotcom/gagsc/refs/heads/main/UI"))()
+
+local RS = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local CS = game:GetService("CollectionService")
+local RunService = game:GetService("RunService")
+local UIS = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+local networking = require(RS.SharedModules.Networking)
+local TimeCycleData = require(RS.SharedModules.TimeCycleData)
+local WeatherData = require(RS.SharedModules.WeatherData)
+local WeatherValues = RS:WaitForChild("WeatherValues")
+local spawnLocations = workspace.Map.SeedPackSpawnServerLocations
+
+local autoRainbow = false
+local autoGold = false
+local autoFruit = false
+local instantCollect = false
+local autoSell = false
+local fruitDelay = 0.1
+local flyEnabled = false
+local flySpeed = 50
+local noclipEnabled = false
+local infiniteJump = false
+local walkSpeed = 16
+
+local autoPlant = false
+local autoPlantDelay = 0.5
+local selectedPlantSeed = "Carrot"
+local autoPlantAll = false
+
+local autoBuySeed = false
+local autoBuyDelay = 1.0
+local selectedBuySeeds = {}
+
+local autoTame = false
+local autoTameDelay = 0.3
+local selectedTamePets = {}
+local tameAllPets = true
+
+local allPets = {
+	"Raccoon", "Monkey", "Robin", "Frog", "Bunny",
+	"Deer", "Owl", "Bee", "Unicorn", "GoldenDragonfly",
+	"BlackDragon", "IceSerpent"
+}
+
+local statusData = {
+	rainbow = { label = nil, lastSeen = "Never", lastCollected = "Never", total = 0, miss = 0, waiting = false },
+	gold    = { label = nil, lastSeen = "Never", lastCollected = "Never", total = 0, miss = 0, waiting = false },
+}
+local allSeedStatus = { label = nil, totalClaimed = 0, totalMiss = 0 }
+
+local CyclePhases = {}
+for name, data in TimeCycleData.Data, nil, nil do
+	table.insert(CyclePhases, {
+		Name = name,
+		Weathers = data.Weathers,
+		Duration = data.Lasts,
+		Order = data.StartOrder
+	})
+end
+table.sort(CyclePhases, function(a, b) return a.Order < b.Order end)
+
+local TotalCycleDuration = 0
+for _, phase in CyclePhases, nil, nil do
+	TotalCycleDuration += phase.Duration
+end
+
+local PhaseIndexByName = {}
+for i, phase in CyclePhases, nil, nil do
+	PhaseIndexByName[phase.Name] = i
+end
+
+local ClockOffset = workspace:GetServerTimeNow() - DateTime.now().UnixTimestamp
+
+local function serverSyncedNow()
+	return DateTime.now().UnixTimestamp + ClockOffset
+end
+
+local function pickWeather(phase, rng)
+	local totalChance = 0
+	for _, w in phase.Weathers, nil, nil do
+		totalChance += w.Chance
+	end
+	local roll = rng:NextNumber()
+	local acc = 0
+	for name, w in phase.Weathers, nil, nil do
+		acc += w.Chance
+		if roll * totalChance <= acc then
+			return name, w
+		end
+	end
+	for name, w in phase.Weathers, nil, nil do
+		return name, w
+	end
+end
+
+local function getWeatherForPhase(cycleIndex, phaseIndex, phase)
+	local rng = Random.new(cycleIndex * 1000 + phaseIndex)
+	return pickWeather(phase, rng)
+end
+
+local function waitForCycleAttributes()
+	local activePhase = workspace:GetAttribute("ActivePhase")
+	local phaseDuration = workspace:GetAttribute("PhaseDuration")
+	while not activePhase or not phaseDuration do
+		task.wait(0.1)
+		activePhase = workspace:GetAttribute("ActivePhase")
+		phaseDuration = workspace:GetAttribute("PhaseDuration")
+	end
+	return activePhase, phaseDuration
+end
+
+local function getCycleState()
+	local activePhaseName, phaseDuration = waitForCycleAttributes()
+	local serverNow = workspace:GetServerTimeNow()
+	local remaining = math.max(0, phaseDuration - serverNow)
+	local phaseIndex = PhaseIndexByName[activePhaseName]
+	if not phaseIndex then phaseIndex = 1 end
+	local phase = CyclePhases[phaseIndex]
+	local elapsed = phase.Duration - remaining
+	local now = os.time()
+	local approxCycleIndex = math.floor(now / TotalCycleDuration)
+	return approxCycleIndex, phaseIndex, phase, elapsed, remaining
+end
+
+local function predictUpcoming(count)
+	local results = {}
+	local cycleIndex, phaseIndex, phase, elapsed, remaining = getCycleState()
+	local curCycle, curPhaseIdx = cycleIndex, phaseIndex
+	local timeUntil = remaining
+	for i = 1, count do
+		curPhaseIdx += 1
+		if curPhaseIdx > #CyclePhases then
+			curPhaseIdx = 1
+			curCycle += 1
+		end
+		local nextPhase = CyclePhases[curPhaseIdx]
+		local weatherName, weatherData = getWeatherForPhase(curCycle, curPhaseIdx, nextPhase)
+		table.insert(results, {
+			PhaseName = nextPhase.Name,
+			WeatherName = weatherName,
+			WeatherData = weatherData,
+			Duration = nextPhase.Duration,
+			TimeUntil = timeUntil,
+		})
+		timeUntil += nextPhase.Duration
+	end
+	return results
+end
+
+local function formatTimeCycle(seconds)
+	seconds = math.max(0, math.floor(seconds))
+	local m = math.floor(seconds / 60)
+	local s = seconds % 60
+	if m > 0 then return string.format("%dm %ds", m, s) end
+	return string.format("%ds", s)
+end
+
+local function findNextOccurrences(targetPhaseName, targetWeatherNames, maxResults, maxCyclesToScan)
+	maxResults = maxResults or 3
+	maxCyclesToScan = maxCyclesToScan or 1000
+	local targetPhaseIndex = PhaseIndexByName[targetPhaseName]
+	local targetPhase = CyclePhases[targetPhaseIndex]
+	if not targetPhase then return {} end
+	local wanted = {}
+	for _, n in targetWeatherNames, nil, nil do
+		wanted[n] = true
+	end
+	local cycleIndex, phaseIndex, _, _, remaining = getCycleState()
+	local results = {}
+	local timeUntil = remaining
+	local scanCycle, scanPhase = cycleIndex, phaseIndex
+	for c = 0, maxCyclesToScan do
+		while scanPhase ~= targetPhaseIndex do
+			scanPhase += 1
+			if scanPhase > #CyclePhases then
+				scanPhase = 1
+				scanCycle += 1
+			end
+			timeUntil += CyclePhases[scanPhase].Duration
+		end
+		local weatherName = getWeatherForPhase(scanCycle, scanPhase, targetPhase)
+		if wanted[weatherName] then
+			table.insert(results, {
+				WeatherName = weatherName,
+				TimeUntil = timeUntil - targetPhase.Duration,
+			})
+			if #results >= maxResults then break end
+		end
+		scanPhase += 1
+		if scanPhase > #CyclePhases then
+			scanPhase = 1
+			scanCycle += 1
+		end
+		timeUntil += CyclePhases[scanPhase].Duration
+	end
+	return results
+end
+
+local function getWeatherMachineState(weatherName)
+	local playing = WeatherValues:GetAttribute(weatherName .. "_Playing")
+	local endTime = WeatherValues:GetAttribute(weatherName .. "_EndTime")
+	local now = serverSyncedNow()
+	local remaining = math.max(0, (endTime or 0) - now)
+	return playing, remaining
+end
+
+local function formatTime()
+	local t = os.date("*t")
+	return string.format("%02d:%02d:%02d", t.hour, t.min, t.sec)
+end
+
+local function updateAllSeedLabel()
+	if not allSeedStatus.label then return end
+	allSeedStatus.label:SetContent(
+		string.format("Claimed: %d | Miss: %d", allSeedStatus.totalClaimed, allSeedStatus.totalMiss)
+	)
+end
+
+local function updateStatusLabel(typ)
+	local s = statusData[typ]
+	if not s.label then return end
+	local state = "OFF"
+	if typ == "rainbow" and autoRainbow then
+		state = s.waiting and "Waiting..." or "ON"
+	elseif typ == "gold" and autoGold then
+		state = s.waiting and "Waiting..." or "ON"
+	end
+	s.label:SetContent(
+		string.format("Status: %s | Seen: %s | Collected: %s | Total: %d | Miss: %d",
+			state, s.lastSeen, s.lastCollected, s.total, s.miss)
+	)
+end
+
+local allSeeds = {
+	"Carrot", "Strawberry", "Blueberry", "Tulip", "Tomato",
+	"Apple", "Bamboo", "Corn", "Cactus", "Pineapple",
+	"Mushroom", "Green Bean", "Banana", "Grape", "Coconut",
+	"Mango", "Dragon Fruit", "Acorn", "Cherry", "Sunflower",
+	"Venus Fly Trap", "Pomegranate", "Poison Apple", "Moon Bloom", "Dragon's Breath"
+}
+
+local grabLog = {}
+
+local function countBackpack()
+	local count = 0
+	local bp = LocalPlayer:FindFirstChild("Backpack")
+	local char = LocalPlayer.Character
+	if bp then
+		for _, v in ipairs(bp:GetChildren()) do
+			if v:IsA("Tool") then count += 1 end
+		end
+	end
+	if char then
+		for _, v in ipairs(char:GetChildren()) do
+			if v:IsA("Tool") then count += 1 end
+		end
+	end
+	return count
+end
+
+local function grab(part, typ)
+	local character = LocalPlayer.Character
+	if not character or not character.PrimaryPart then return end
+	local hum = character:FindFirstChildOfClass("Humanoid")
+	if not hum or hum.Health <= 0 then return end
+
+	local beforeCount = countBackpack()
+	local success = false
+
+	-- teleport ke seed
+	character:PivotTo(CFrame.new(part.Position + Vector3.new(0, 3, 0)))
+	task.wait()
+
+	if part.Parent then
+		-- cara 1: fireproximityprompt (cara yang terbukti berhasil)
+		local prompt = part:FindFirstChildOfClass("ProximityPrompt")
+			or part:FindFirstChild("BuyPrompt")
+		if prompt then
+			pcall(function() fireproximityprompt(prompt) end)
+			pcall(function() fireproximityprompt(prompt) end)
+			pcall(function() fireproximityprompt(prompt) end)
+		end
+
+		-- cara 2: ClickPack fallback
+		pcall(function() networking.SeedPack.ClickPack:Fire(part.Name) end)
+		pcall(function() networking.SeedPack.ClickPack:Fire(part) end)
+	end
+
+	-- tunggu sebentar lalu cek inventory beneran bertambah
+	task.wait(0.3)
+	local afterCount = countBackpack()
+	success = afterCount > beforeCount
+
+	if typ then
+		if success then
+			statusData[typ].lastCollected = formatTime()
+			statusData[typ].total += 1
+			statusData[typ].waiting = false
+			allSeedStatus.totalClaimed += 1
+			table.insert(grabLog, string.format("[%s] CLAIMED %s seed", formatTime(), typ))
+			if typ == "rainbow" then
+				than("🌈 Rainbow Seed berhasil diklaim!", 4, Color3.fromRGB(255, 100, 255), "HexRoot Hub", "Seed Collector")
+			elseif typ == "gold" then
+				than("⭐ Gold Seed berhasil diklaim!", 4, Color3.fromRGB(255, 215, 0), "HexRoot Hub", "Seed Collector")
+			end
+		else
+			statusData[typ].miss += 1
+			allSeedStatus.totalMiss += 1
+			table.insert(grabLog, string.format("[%s] MISS %s seed", formatTime(), typ))
+			if typ == "rainbow" then
+				than("❌ Gagal klaim Rainbow Seed", 3, Color3.fromRGB(255, 80, 80), "HexRoot Hub", "Seed Collector")
+			elseif typ == "gold" then
+				than("❌ Gagal klaim Gold Seed", 3, Color3.fromRGB(255, 80, 80), "HexRoot Hub", "Seed Collector")
+			end
+		end
+		if #grabLog > 50 then table.remove(grabLog, 1) end
+		updateStatusLabel(typ)
+		updateAllSeedLabel()
+	end
+end
+
+local function waitForSeedAttr(part, timeout)
+	timeout = timeout or 2
+	local deadline = os.clock() + timeout
+	while os.clock() < deadline and part.Parent do
+		local isRainbow = part:GetAttribute("RainbowSeed") == true
+		local isGold    = part:GetAttribute("GoldSeed")    == true
+		local packName  = part:GetAttribute("SeedPack")
+		if isRainbow or isGold or packName ~= nil then
+			return isRainbow, isGold
+		end
+		task.wait(0.05)
+	end
+	return false, false
+end
+
+local function scanExisting()
+	for _, part in ipairs(spawnLocations:GetChildren()) do
+		task.spawn(function()
+			local isRainbow = part:GetAttribute("RainbowSeed") == true
+			local isGold    = part:GetAttribute("GoldSeed")    == true
+			if isRainbow then
+				statusData.rainbow.lastSeen = formatTime()
+				statusData.rainbow.waiting = true
+				updateStatusLabel("rainbow")
+				if autoRainbow then grab(part, "rainbow") end
+			end
+			if isGold then
+				statusData.gold.lastSeen = formatTime()
+				statusData.gold.waiting = true
+				updateStatusLabel("gold")
+				if autoGold then grab(part, "gold") end
+			end
+		end)
+	end
+end
+
+spawnLocations.ChildAdded:Connect(function(part)
+	task.spawn(function()
+		local isRainbow, isGold = waitForSeedAttr(part, 2)
+		if isRainbow then
+			statusData.rainbow.lastSeen = formatTime()
+			statusData.rainbow.waiting = true
+			updateStatusLabel("rainbow")
+			than("🌈 Rainbow Seed terdeteksi!", 3, Color3.fromRGB(255, 100, 255), "HexRoot Hub", "Seed Collector")
+			if autoRainbow then grab(part, "rainbow") end
+		end
+		if isGold then
+			statusData.gold.lastSeen = formatTime()
+			statusData.gold.waiting = true
+			updateStatusLabel("gold")
+			than("⭐ Gold Seed terdeteksi!", 3, Color3.fromRGB(255, 215, 0), "HexRoot Hub", "Seed Collector")
+			if autoGold then grab(part, "gold") end
+		end
+		if not isRainbow and not isGold then
+			local c1, c2
+			c1 = part:GetAttributeChangedSignal("RainbowSeed"):Connect(function()
+				if part:GetAttribute("RainbowSeed") == true then
+					statusData.rainbow.lastSeen = formatTime()
+					statusData.rainbow.waiting = true
+					updateStatusLabel("rainbow")
+					than("🌈 Rainbow Seed terdeteksi!", 3, Color3.fromRGB(255, 100, 255), "HexRoot Hub", "Seed Collector")
+					if autoRainbow then grab(part, "rainbow") end
+					c1:Disconnect()
+				end
+			end)
+			c2 = part:GetAttributeChangedSignal("GoldSeed"):Connect(function()
+				if part:GetAttribute("GoldSeed") == true then
+					statusData.gold.lastSeen = formatTime()
+					statusData.gold.waiting = true
+					updateStatusLabel("gold")
+					than("⭐ Gold Seed terdeteksi!", 3, Color3.fromRGB(255, 215, 0), "HexRoot Hub", "Seed Collector")
+					if autoGold then grab(part, "gold") end
+					c2:Disconnect()
+				end
+			end)
+		end
+	end)
+end)
+
+scanExisting()
+
+do
+	local CoreGui = game:GetService("CoreGui")
+	local TeleportService = game:GetService("TeleportService")
+	local keywords = { "disconnect", "disconnected", "leave", "error", "rejoin" }
+
+	local function checkDisconnect(obj)
+		if not obj:IsA("TextLabel") then return end
+
+		local screenGui = obj:FindFirstAncestorOfClass("ScreenGui")
+		if not screenGui or not string.find(string.lower(screenGui.Name), "prompt") then
+			return
+		end
+
+		local txt = string.lower(obj.Text or "")
+		for _, kw in ipairs(keywords) do
+			if string.find(txt, kw) then
+				TeleportService:Teleport(game.PlaceId, LocalPlayer)
+				return
+			end
+		end
+	end
+
+	CoreGui.DescendantAdded:Connect(checkDisconnect)
+
+	for _, d in ipairs(CoreGui:GetDescendants()) do
+		checkDisconnect(d)
+	end
+end
+
+task.spawn(function()
+	while true do
+		if autoFruit then
+			for _, prompt in ipairs(CS:GetTagged("HarvestPrompt")) do
+				if prompt:IsDescendantOf(workspace) and prompt.Enabled and not prompt:GetAttribute("Collected") then
+					local part  = prompt.Parent
+					local model = part and part:FindFirstAncestorWhichIsA("Model")
+					if model then
+						local plantId = model:GetAttribute("PlantId")
+						local fruitId = model:GetAttribute("FruitId")
+						if plantId then
+							networking.Garden.CollectFruit:Fire(plantId, fruitId or "")
+							prompt:SetAttribute("Collected", true)
+							task.delay(0.15, function()
+								if prompt then prompt:SetAttribute("Collected", nil) end
+							end)
+						end
+					end
+				end
+			end
+		end
+		if instantCollect then
+			task.wait()
+		else
+			task.wait(fruitDelay)
+		end
+	end
+end)
+
+local lastSellNotif = 0
+task.spawn(function()
+	while true do
+		task.wait(0.1)
+		if autoSell then
+			networking.NPCS.SellAll:Fire()
+			local now = os.clock()
+			if now - lastSellNotif >= 10 then
+				lastSellNotif = now
+				than("💰 Auto Sell berjalan", 2, Color3.fromRGB(100, 255, 100), "HexRoot Hub", "Sell")
+			end
+		end
+	end
+end)
+
+local function getPlayerPlot()
+	local plotId = LocalPlayer:GetAttribute("PlotId")
+	if not plotId then return nil end
+	local gardens = workspace:FindFirstChild("Gardens")
+	if not gardens then return nil end
+	return gardens:FindFirstChild("Plot" .. plotId)
+end
+
+
+
+local function getAllSeedTools()
+	local tools = {}
+	local function scanContainer(c)
+		if not c then return end
+		for _, item in ipairs(c:GetChildren()) do
+			if item:IsA("Tool") and item:GetAttribute("SeedTool") then
+				table.insert(tools, item)
+			end
+		end
+	end
+	scanContainer(LocalPlayer.Character)
+	scanContainer(LocalPlayer:FindFirstChild("Backpack"))
+	return tools
+end
+
+local function getEquippedSeedTool(seedName)
+	local function findIn(c)
+		if not c then return nil end
+		for _, item in ipairs(c:GetChildren()) do
+			if item:IsA("Tool") and item:GetAttribute("SeedTool") == seedName then
+				return item
+			end
+		end
+	end
+	return findIn(LocalPlayer.Character) or findIn(LocalPlayer:FindFirstChild("Backpack"))
+end
+
+
+
+local function isAlive()
+	local char = LocalPlayer.Character
+	if not char then return false end
+	local hum = char:FindFirstChildOfClass("Humanoid")
+	return hum and hum.Health > 0
+end
+
+task.spawn(function()
+	while true do
+		task.wait(autoPlantDelay)
+		if not autoPlant then continue end
+		local plot = getPlayerPlot()
+		if not plot then continue end
+		local plantAreas = {}
+		for _, part in ipairs(CS:GetTagged("PlantArea")) do
+			if part:IsDescendantOf(plot) then
+				table.insert(plantAreas, part)
+			end
+		end
+		if #plantAreas == 0 then continue end
+		local plantsFolder = plot:FindFirstChild("Plants")
+		if autoPlantAll then
+			local allTools = getAllSeedTools()
+			if #allTools == 0 then continue end
+			local emptySlots = {}
+			for _, area in ipairs(plantAreas) do
+				if isSlotEmpty(area, plantsFolder) then
+					table.insert(emptySlots, area)
+				end
+			end
+			if #emptySlots == 0 then continue end
+			local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+			local slotIdx = 1
+			for _, tool in ipairs(allTools) do
+				if slotIdx > #emptySlots then break end
+				local seedName = tool:GetAttribute("SeedTool")
+				if not seedName then continue end
+				if hum and tool.Parent ~= LocalPlayer.Character then
+					hum:EquipTool(tool)
+					task.wait(0.1)
+				end
+				local area = emptySlots[slotIdx]
+				local pos  = randomPosInArea(area)
+				networking.Plant.PlantSeed:Fire(pos, seedName, tool)
+				task.wait(0.08)
+				slotIdx += 1
+			end
+		else
+			local tool = getEquippedSeedTool(selectedPlantSeed)
+			if not tool then
+				local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+				local bp  = LocalPlayer:FindFirstChild("Backpack")
+				if hum and bp then
+					for _, item in ipairs(bp:GetChildren()) do
+						if item:IsA("Tool") and item:GetAttribute("SeedTool") == selectedPlantSeed then
+							hum:EquipTool(item)
+							task.wait(0.1)
+							tool = item
+							break
+						end
+					end
+				end
+			end
+			if not tool then continue end
+			for _, area in ipairs(plantAreas) do
+				if isSlotEmpty(area, plantsFolder) then
+					local pos = randomPosInArea(area)
+					networking.Plant.PlantSeed:Fire(pos, selectedPlantSeed, tool)
+					task.wait(0.08)
+				end
+			end
+		end
+	end
+end)
+
+task.spawn(function()
+	while true do
+		task.wait(autoBuyDelay)
+		if autoBuySeed then
+			for seedName, enabled in pairs(selectedBuySeeds) do
+				if enabled then
+					local bp = LocalPlayer:FindFirstChild("Backpack")
+					local char = LocalPlayer.Character
+					local countBefore = 0
+					if bp then
+						for _, item in ipairs(bp:GetChildren()) do
+							if item:IsA("Tool") and item:GetAttribute("SeedTool") == seedName then
+								countBefore += 1
+							end
+						end
+					end
+					if char then
+						for _, item in ipairs(char:GetChildren()) do
+							if item:IsA("Tool") and item:GetAttribute("SeedTool") == seedName then
+								countBefore += 1
+							end
+						end
+					end
+					networking.SeedShop.PurchaseSeed:Fire(seedName)
+					task.wait(0.5)
+					local countAfter = 0
+					bp = LocalPlayer:FindFirstChild("Backpack")
+					char = LocalPlayer.Character
+					if bp then
+						for _, item in ipairs(bp:GetChildren()) do
+							if item:IsA("Tool") and item:GetAttribute("SeedTool") == seedName then
+								countAfter += 1
+							end
+						end
+					end
+					if char then
+						for _, item in ipairs(char:GetChildren()) do
+							if item:IsA("Tool") and item:GetAttribute("SeedTool") == seedName then
+								countAfter += 1
+							end
+						end
+					end
+					if countAfter > countBefore then
+						than("🛒 Berhasil membeli: " .. seedName, 3, Color3.fromRGB(100, 200, 255), "HexRoot Hub", "Shop")
+					end
+					task.wait(0.1)
+				end
+			end
+		end
+	end
+end)
+
+task.spawn(function()
+	while true do
+		task.wait(autoTameDelay)
+		if not autoTame then continue end
+		if not isAlive() then continue end
+		local wildPetRef = workspace:FindFirstChild("Map") and workspace.Map:FindFirstChild("WildPetRef")
+		if not wildPetRef then continue end
+		for _, part in ipairs(wildPetRef:GetChildren()) do
+			if not autoTame then break end
+			if not isAlive() then break end
+			if not part:IsA("BasePart") then continue end
+			if not part:IsDescendantOf(workspace) then continue end
+			local owner = part:GetAttribute("OwnerUserId")
+			if owner ~= nil and owner ~= 0 then continue end
+			local petName = part:GetAttribute("PetName")
+			if not petName then continue end
+			if not tameAllPets and not selectedTamePets[petName] then continue end
+			local char = LocalPlayer.Character
+			if char and char.PrimaryPart then
+				local dist = (char.PrimaryPart.Position - part.Position).Magnitude
+				if dist > 12 then
+					if not autoTame then break end
+					char:PivotTo(CFrame.new(part.Position + Vector3.new(0, 3, 0)))
+					task.wait(0.15)
+				end
+			end
+			if not autoTame then break end
+			if not isAlive() then break end
+			networking.Pets.WildPetTame:Fire(part)
+			than("🐾 Berhasil menjinakkan: " .. petName, 3, Color3.fromRGB(255, 180, 100), "HexRoot Hub", "Pet")
+			task.wait(0.2)
+		end
+	end
+end)
+
+local flyConnection
+local flyBody = {}
+
+local function startFly()
+	local char = LocalPlayer.Character
+	if not char then return end
+	local hrp = char:FindFirstChild("HumanoidRootPart")
+	local hum = char:FindFirstChildOfClass("Humanoid")
+	if not hrp or not hum then return end
+	hum.PlatformStand = true
+	local bg = Instance.new("BodyGyro")
+	bg.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+	bg.D = 100
+	bg.Parent = hrp
+	flyBody.gyro = bg
+	local bv = Instance.new("BodyVelocity")
+	bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+	bv.Velocity = Vector3.zero
+	bv.Parent = hrp
+	flyBody.vel = bv
+	local cam = workspace.CurrentCamera
+	flyConnection = RunService.Heartbeat:Connect(function()
+		local dir = Vector3.zero
+		if UIS:IsKeyDown(Enum.KeyCode.W)         then dir += cam.CFrame.LookVector end
+		if UIS:IsKeyDown(Enum.KeyCode.S)         then dir -= cam.CFrame.LookVector end
+		if UIS:IsKeyDown(Enum.KeyCode.A)         then dir -= cam.CFrame.RightVector end
+		if UIS:IsKeyDown(Enum.KeyCode.D)         then dir += cam.CFrame.RightVector end
+		if UIS:IsKeyDown(Enum.KeyCode.Space)     then dir += Vector3.new(0, 1, 0) end
+		if UIS:IsKeyDown(Enum.KeyCode.LeftShift) then dir -= Vector3.new(0, 1, 0) end
+		bv.Velocity = dir.Magnitude > 0 and dir.Unit * flySpeed or Vector3.zero
+		bg.CFrame    = cam.CFrame
+	end)
+end
+
+local function stopFly()
+	if flyConnection then flyConnection:Disconnect() flyConnection = nil end
+	if flyBody.gyro and flyBody.gyro.Parent then flyBody.gyro:Destroy() end
+	if flyBody.vel  and flyBody.vel.Parent  then flyBody.vel:Destroy() end
+	flyBody = {}
+	local char = LocalPlayer.Character
+	if char then
+		local hum = char:FindFirstChildOfClass("Humanoid")
+		if hum then hum.PlatformStand = false end
+	end
+end
+
+local noclipConn
+local function startNoclip()
+	noclipConn = RunService.Stepped:Connect(function()
+		local char = LocalPlayer.Character
+		if not char then return end
+		for _, part in ipairs(char:GetDescendants()) do
+			if part:IsA("BasePart") then part.CanCollide = false end
+		end
+	end)
+end
+local function stopNoclip()
+	if noclipConn then noclipConn:Disconnect() noclipConn = nil end
+end
+
+local Window = UI:Window({
+	Title = "HexRoot Hub",
+	Footer = "( ninjah putih )",
+	Color = Color3.fromRGB(100, 200, 255),
+	Version = 2,
+	Image = "110581774864786"
+})
+
+local FarmTab    = Window:AddTab({ Name = "Auto Farm",  Icon = "star"          })
+local PlantTab   = Window:AddTab({ Name = "Plant",      Icon = "leaf"          })
+local ShopTab    = Window:AddTab({ Name = "Shop",       Icon = "shopping-cart" })
+local PetTab     = Window:AddTab({ Name = "Pet",        Icon = "paw"           })
+local WeatherTab = Window:AddTab({ Name = "Weather",    Icon = "cloud"         })
+local PlayerTab  = Window:AddTab({ Name = "Player",     Icon = "player"        })
+local ConfigTab  = Window:AddTab({ Name = "Config",     Icon = "settings"      })
+
+local SeedSection     = FarmTab:AddSection("Seed Collector", false)
+local FruitSection    = FarmTab:AddSection("Fruit", false)
+local SellSection     = FarmTab:AddSection("Sell", false)
+local PlantSection    = PlantTab:AddSection("Auto Plant", false)
+local ShopSection     = ShopTab:AddSection("Auto Buy Seed", false)
+local PetSection      = PetTab:AddSection("Auto Tame Pet", false)
+local CycleSection    = WeatherTab:AddSection("Time Cycle", false)
+local WeatherSection  = WeatherTab:AddSection("Weather Events", false)
+local MoonSection     = WeatherTab:AddSection("Rare Moons", false)
+local DebugSection    = WeatherTab:AddSection("Debug Info", false)
+local MovementSection = PlayerTab:AddSection("Movement", false)
+local MiscSection     = PlayerTab:AddSection("Misc", false)
+
+SeedSection:AddToggle({
+	Title    = "Auto Collect Rainbow Seed",
+	Default  = false,
+	Callback = function(val)
+		autoRainbow = val
+		statusData.rainbow.waiting = val
+		updateStatusLabel("rainbow")
+		if val then
+			scanExisting()
+			than("🌈 Auto Collect Rainbow Seed: ON", 3, Color3.fromRGB(255, 100, 255), "HexRoot Hub", "Seed Collector")
+		else
+			than("🌈 Auto Collect Rainbow Seed: OFF", 3, Color3.fromRGB(200, 200, 200), "HexRoot Hub", "Seed Collector")
+		end
+	end
+})
+
+local rainbowStatusLabel = SeedSection:AddParagraph({
+	Title   = "Rainbow Status",
+	Content = "Status: OFF | Seen: Never | Collected: Never | Total: 0"
+})
+statusData.rainbow.label = rainbowStatusLabel
+
+SeedSection:AddToggle({
+	Title    = "Auto Collect Gold Seed",
+	Default  = false,
+	Callback = function(val)
+		autoGold = val
+		statusData.gold.waiting = val
+		updateStatusLabel("gold")
+		if val then
+			scanExisting()
+			than("⭐ Auto Collect Gold Seed: ON", 3, Color3.fromRGB(255, 215, 0), "HexRoot Hub", "Seed Collector")
+		else
+			than("⭐ Auto Collect Gold Seed: OFF", 3, Color3.fromRGB(200, 200, 200), "HexRoot Hub", "Seed Collector")
+		end
+	end
+})
+
+local goldStatusLabel = SeedSection:AddParagraph({
+	Title   = "Gold Status",
+	Content = "Status: OFF | Seen: Never | Collected: Never | Total: 0"
+})
+statusData.gold.label = goldStatusLabel
+
+local allSeedLabel = SeedSection:AddParagraph({
+	Title   = "Status All Seed",
+	Content = "Claimed: 0 | Miss: 0"
+})
+allSeedStatus.label = allSeedLabel
+
+SeedSection:AddButton({
+	Title    = "Grab Now (Manual)",
+	SubTitle = "Print Grab Log",
+	Callback = function()
+		local found = false
+		for _, part in ipairs(spawnLocations:GetChildren()) do
+			if part:GetAttribute("RainbowSeed") == true then grab(part, "rainbow") found = true end
+			if part:GetAttribute("GoldSeed")    == true then grab(part, "gold") found = true end
+		end
+		if not found then
+			than("⚠️ Tidak ada seed spesial ditemukan", 3, Color3.fromRGB(255, 200, 0), "HexRoot Hub", "Seed Collector")
+		end
+	end,
+	SubCallback = function()
+		if #grabLog == 0 then
+			print("[SeedLog] Belum ada grab.")
+		else
+			for _, line in ipairs(grabLog) do print(line) end
+		end
+	end
+})
+
+FruitSection:AddToggle({
+	Title    = "Auto Collect All Fruit",
+	Default  = false,
+	Callback = function(val)
+		autoFruit = val
+		if val then
+			than("🍎 Auto Collect Fruit: ON", 3, Color3.fromRGB(100, 255, 150), "HexRoot Hub", "Fruit")
+		else
+			than("🍎 Auto Collect Fruit: OFF", 3, Color3.fromRGB(200, 200, 200), "HexRoot Hub", "Fruit")
+		end
+	end
+})
+
+FruitSection:AddToggle({
+	Title    = "Instant Collect (No Delay)",
+	Default  = false,
+	Callback = function(val)
+		instantCollect = val
+		if val then
+			than("⚡ Instant Collect: ON", 3, Color3.fromRGB(255, 255, 100), "HexRoot Hub", "Fruit")
+		else
+			than("⚡ Instant Collect: OFF", 3, Color3.fromRGB(200, 200, 200), "HexRoot Hub", "Fruit")
+		end
+	end
+})
+
+FruitSection:AddSlider({
+	Title     = "Fruit Collect Delay",
+	Min       = 0.05,
+	Max       = 2,
+	Default   = 0.1,
+	Increment = 0.05,
+	Callback  = function(val) fruitDelay = val end
+})
+
+SellSection:AddToggle({
+	Title    = "Auto Sell All",
+	Default  = false,
+	Callback = function(val)
+		autoSell = val
+		if val then
+			than("💰 Auto Sell: ON", 3, Color3.fromRGB(100, 255, 100), "HexRoot Hub", "Sell")
+		else
+			than("💰 Auto Sell: OFF", 3, Color3.fromRGB(200, 200, 200), "HexRoot Hub", "Sell")
+		end
+	end
+})
+
+SellSection:AddButton({
+	Title    = "Sell Once",
+	Callback = function()
+		networking.NPCS.SellAll:Fire()
+		than("💰 Semua item berhasil dijual!", 3, Color3.fromRGB(100, 255, 100), "HexRoot Hub", "Sell")
+	end
+})
+
+PlantSection:AddToggle({
+	Title    = "Auto Plant",
+	Default  = false,
+	Callback = function(val)
+		autoPlant = val
+		if val then
+			than("🌱 Auto Plant: ON", 3, Color3.fromRGB(100, 220, 100), "HexRoot Hub", "Plant")
+		else
+			than("🌱 Auto Plant: OFF", 3, Color3.fromRGB(200, 200, 200), "HexRoot Hub", "Plant")
+		end
+	end
+})
+
+PlantSection:AddToggle({
+	Title    = "Auto Plant All Seeds",
+	Default  = false,
+	Callback = function(val)
+		autoPlantAll = val
+		if val then
+			than("🌱 Auto Plant All: ON", 3, Color3.fromRGB(100, 220, 100), "HexRoot Hub", "Plant")
+		else
+			than("🌱 Auto Plant All: OFF", 3, Color3.fromRGB(200, 200, 200), "HexRoot Hub", "Plant")
+		end
+	end
+})
+
+PlantSection:AddDropdown({
+	Title    = "Select Seed to Plant",
+	Options  = allSeeds,
+	Default  = "Carrot",
+	Callback = function(val) selectedPlantSeed = val end
+})
+
+PlantSection:AddSlider({
+	Title     = "Plant Delay (s)",
+	Min       = 0.1,
+	Max       = 5,
+	Default   = 0.5,
+	Increment = 0.1,
+	Callback  = function(val) autoPlantDelay = val end
+})
+
+PlantSection:AddButton({
+	Title    = "Plant Once Now",
+	SubTitle = "Plant All Once",
+	Callback = function()
+		local tool = getEquippedSeedTool(selectedPlantSeed)
+		if not tool then
+			than("⚠️ Tool tidak ditemukan: " .. selectedPlantSeed, 3, Color3.fromRGB(255, 80, 80), "HexRoot Hub", "Plant")
+			return
+		end
+		local plot = getPlayerPlot()
+		if not plot then return end
+		local plantsFolder = plot:FindFirstChild("Plants")
+		local slots = getPlantSlots(plot)
+		local count = 0
+		for _, pos in ipairs(slots) do
+			if not isOccupied(pos, plantsFolder) then
+				networking.Plant.PlantSeed:Fire(pos, selectedPlantSeed, tool)
+				task.wait(0.08)
+				count += 1
+			end
+		end
+		than("🌱 Menanam " .. selectedPlantSeed .. " (" .. count .. " slot)", 3, Color3.fromRGB(100, 220, 100), "HexRoot Hub", "Plant")
+	end,
+	SubCallback = function()
+		local plot = getPlayerPlot()
+		if not plot then return end
+		local plantsFolder = plot:FindFirstChild("Plants")
+		local slots = getPlantSlots(plot)
+		local emptySlots = {}
+		for _, pos in ipairs(slots) do
+			if not isOccupied(pos, plantsFolder) then table.insert(emptySlots, pos) end
+		end
+		if #emptySlots == 0 then
+			than("⚠️ Tidak ada slot kosong", 3, Color3.fromRGB(255, 200, 0), "HexRoot Hub", "Plant")
+			return
+		end
+		local allTools = getAllSeedTools()
+		local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+		local slotIdx = 1
+		local count = 0
+		for _, tool in ipairs(allTools) do
+			if slotIdx > #emptySlots then break end
+			local seedName = tool:GetAttribute("SeedTool")
+			if not seedName then continue end
+			if hum and tool.Parent ~= LocalPlayer.Character then
+				hum:EquipTool(tool)
+				task.wait(0.1)
+			end
+			networking.Plant.PlantSeed:Fire(emptySlots[slotIdx], seedName, tool)
+			task.wait(0.08)
+			slotIdx += 1
+			count += 1
+		end
+		than("🌱 Plant All selesai (" .. count .. " seed ditanam)", 3, Color3.fromRGB(100, 220, 100), "HexRoot Hub", "Plant")
+	end
+})
+
+ShopSection:AddToggle({
+	Title    = "Auto Buy Selected Seeds",
+	Default  = false,
+	Callback = function(val)
+		autoBuySeed = val
+		if val then
+			than("🛒 Auto Buy Seed: ON", 3, Color3.fromRGB(100, 200, 255), "HexRoot Hub", "Shop")
+		else
+			than("🛒 Auto Buy Seed: OFF", 3, Color3.fromRGB(200, 200, 200), "HexRoot Hub", "Shop")
+		end
+	end
+})
+
+ShopSection:AddSlider({
+	Title     = "Buy Interval (s)",
+	Min       = 0.5,
+	Max       = 10,
+	Default   = 1.0,
+	Increment = 0.5,
+	Callback  = function(val) autoBuyDelay = val end
+})
+
+local seedDropdown = ShopSection:AddDropdown({
+	Title    = "Seeds to Buy",
+	Multi    = true,
+	Options  = allSeeds,
+	Default  = {},
+	Callback = function(selectedList)
+		for _, s in ipairs(allSeeds) do selectedBuySeeds[s] = false end
+		if type(selectedList) == "table" then
+			for _, s in ipairs(selectedList) do selectedBuySeeds[s] = true end
+		end
+	end
+})
+
+ShopSection:AddButton({
+	Title    = "Buy Selected Once",
+	SubTitle = "Select All",
+	Callback = function()
+		local count = 0
+		for seedName, enabled in pairs(selectedBuySeeds) do
+			if enabled then
+				networking.SeedShop.PurchaseSeed:Fire(seedName)
+				than("🛒 Berhasil membeli: " .. seedName, 3, Color3.fromRGB(100, 200, 255), "HexRoot Hub", "Shop")
+				task.wait(0.1)
+				count += 1
+			end
+		end
+		if count == 0 then
+			than("⚠️ Belum ada seed yang dipilih", 3, Color3.fromRGB(255, 200, 0), "HexRoot Hub", "Shop")
+		end
+	end,
+	SubCallback = function() seedDropdown:Set(allSeeds) end
+})
+
+ShopSection:AddButton({
+	Title    = "Deselect All",
+	Callback = function()
+		seedDropdown:Set({})
+		than("🛒 Semua seed di-deselect", 2, Color3.fromRGB(200, 200, 200), "HexRoot Hub", "Shop")
+	end
+})
+
+PetSection:AddToggle({
+	Title    = "Auto Tame Wild Pet",
+	Default  = false,
+	Callback = function(val)
+		autoTame = val
+		if val then
+			than("🐾 Auto Tame Pet: ON", 3, Color3.fromRGB(255, 180, 100), "HexRoot Hub", "Pet")
+		else
+			than("🐾 Auto Tame Pet: OFF", 3, Color3.fromRGB(200, 200, 200), "HexRoot Hub", "Pet")
+		end
+	end
+})
+
+PetSection:AddToggle({
+	Title    = "Tame All Pets",
+	Default  = true,
+	Callback = function(val) tameAllPets = val end
+})
+
+local petDropdown = PetSection:AddDropdown({
+	Title    = "Select Pets to Tame",
+	Multi    = true,
+	Options  = allPets,
+	Default  = {},
+	Callback = function(selectedList)
+		for _, p in ipairs(allPets) do selectedTamePets[p] = false end
+		if type(selectedList) == "table" then
+			for _, p in ipairs(selectedList) do selectedTamePets[p] = true end
+		end
+	end
+})
+
+PetSection:AddSlider({
+	Title     = "Tame Scan Delay (s)",
+	Min       = 0.1,
+	Max       = 5,
+	Default   = 0.3,
+	Increment = 0.1,
+	Callback  = function(val) autoTameDelay = val end
+})
+
+PetSection:AddButton({
+	Title    = "Tame All Now",
+	SubTitle = "Select All Pets",
+	Callback = function()
+		if not isAlive() then
+			than("⚠️ Karakter mati, tidak bisa tame", 3, Color3.fromRGB(255, 80, 80), "HexRoot Hub", "Pet")
+			return
+		end
+		local wildPetRef = workspace:FindFirstChild("Map") and workspace.Map:FindFirstChild("WildPetRef")
+		if not wildPetRef then return end
+		local count = 0
+		for _, part in ipairs(wildPetRef:GetChildren()) do
+			if not isAlive() then break end
+			if not part:IsA("BasePart") then continue end
+			local owner = part:GetAttribute("OwnerUserId")
+			if owner ~= nil and owner ~= 0 then continue end
+			local petName = part:GetAttribute("PetName")
+			if not petName then continue end
+			if not tameAllPets and not selectedTamePets[petName] then continue end
+			local char = LocalPlayer.Character
+			if char and char.PrimaryPart then
+				local dist = (char.PrimaryPart.Position - part.Position).Magnitude
+				if dist > 12 then
+					char:PivotTo(CFrame.new(part.Position + Vector3.new(0, 3, 0)))
+					task.wait(0.15)
+				end
+			end
+			if not isAlive() then break end
+			networking.Pets.WildPetTame:Fire(part)
+			than("🐾 Berhasil menjinakkan: " .. petName, 3, Color3.fromRGB(255, 180, 100), "HexRoot Hub", "Pet")
+			task.wait(0.2)
+			count += 1
+		end
+		than("🐾 Selesai! Total " .. count .. " pet dijinakkan", 4, Color3.fromRGB(255, 180, 100), "HexRoot Hub", "Pet")
+	end,
+	SubCallback = function() petDropdown:Set(allPets) end
+})
+
+local CurrentPhaseLabel = CycleSection:AddParagraph({ Title = "Current Phase", Content = "Loading..." })
+local CurrentWeatherLabel = CycleSection:AddParagraph({ Title = "Current Weather", Content = "Loading..." })
+local TimeRemainingLabel = CycleSection:AddParagraph({ Title = "Time Remaining", Content = "Loading..." })
+
+local UpcomingLabels = {}
+for i = 1, 5 do
+	UpcomingLabels[i] = CycleSection:AddParagraph({ Title = "Upcoming #" .. i, Content = "Loading..." })
+end
+
+local WeatherEventLabels = {}
+for _, w in WeatherData.Data, nil, nil do
+	WeatherEventLabels[w.Name] = WeatherSection:AddParagraph({ Title = w.Name, Content = "Checking..." })
+end
+
+local GoldmoonLabel = MoonSection:AddParagraph({ Title = "Next Goldmoon", Content = "Scanning..." })
+local RainbowMoonLabel = MoonSection:AddParagraph({ Title = "Next Rainbow Moon", Content = "Scanning..." })
+local NextGoldmoonsLabel = MoonSection:AddParagraph({ Title = "Upcoming Goldmoons (next 3)", Content = "Scanning..." })
+local NextRainbowMoonsLabel = MoonSection:AddParagraph({ Title = "Upcoming Rainbow Moons (next 3)", Content = "Scanning..." })
+
+local ClockOffsetLabel = DebugSection:AddParagraph({
+	Title = "Clock Offset (server - client)",
+	Content = formatTimeCycle(math.abs(ClockOffset)) .. (ClockOffset >= 0 and " (server ahead)" or " (server behind)")
+})
+
+local RainDebugLabel = DebugSection:AddParagraph({ Title = "Rain Debug", Content = "Loading..." })
+
+MovementSection:AddToggle({
+	Title    = "Fly",
+	Default  = false,
+	Callback = function(val)
+		flyEnabled = val
+		if val then
+			startFly()
+			than("✈️ Fly: ON (Speed: " .. flySpeed .. ")", 3, Color3.fromRGB(100, 200, 255), "HexRoot Hub", "Movement")
+		else
+			stopFly()
+			than("✈️ Fly: OFF", 3, Color3.fromRGB(200, 200, 200), "HexRoot Hub", "Movement")
+		end
+	end
+})
+
+MovementSection:AddSlider({
+	Title     = "Fly Speed",
+	Min       = 10,
+	Max       = 300,
+	Default   = 50,
+	Increment = 5,
+	Callback  = function(val) flySpeed = val end
+})
+
+MovementSection:AddToggle({
+	Title    = "Noclip",
+	Default  = false,
+	Callback = function(val)
+		noclipEnabled = val
+		if val then
+			startNoclip()
+			than("👻 Noclip: ON", 3, Color3.fromRGB(200, 150, 255), "HexRoot Hub", "Movement")
+		else
+			stopNoclip()
+			than("👻 Noclip: OFF", 3, Color3.fromRGB(200, 200, 200), "HexRoot Hub", "Movement")
+		end
+	end
+})
+
+MovementSection:AddToggle({
+	Title    = "Infinite Jump",
+	Default  = false,
+	Callback = function(val)
+		infiniteJump = val
+		if val then
+			than("🦘 Infinite Jump: ON", 3, Color3.fromRGB(255, 220, 100), "HexRoot Hub", "Movement")
+		else
+			than("🦘 Infinite Jump: OFF", 3, Color3.fromRGB(200, 200, 200), "HexRoot Hub", "Movement")
+		end
+	end
+})
+
+MovementSection:AddSlider({
+	Title     = "Walk Speed",
+	Min       = 16,
+	Max       = 500,
+	Default   = 16,
+	Increment = 1,
+	Callback  = function(val)
+		walkSpeed = val
+		local char = LocalPlayer.Character
+		local hum  = char and char:FindFirstChildOfClass("Humanoid")
+		if hum then hum.WalkSpeed = val end
+	end
+})
+
+UIS.JumpRequest:Connect(function()
+	if infiniteJump then
+		local char = LocalPlayer.Character
+		local hum  = char and char:FindFirstChildOfClass("Humanoid")
+		if hum then hum:ChangeState(Enum.HumanoidStateType.Jumping) end
+	end
+end)
+
+LocalPlayer.CharacterAdded:Connect(function(char)
+	local hum = char:WaitForChild("Humanoid")
+	hum.WalkSpeed = walkSpeed
+	if flyEnabled then task.wait(0.5) startFly() end
+end)
+
+MiscSection:AddButton({
+	Title    = "Teleport to Rainbow/Gold Seed",
+	Callback = function()
+		for _, part in ipairs(spawnLocations:GetChildren()) do
+			if part:GetAttribute("RainbowSeed") == true or part:GetAttribute("GoldSeed") == true then
+				grab(part, nil)
+				than("🚀 Teleport ke seed spesial!", 3, Color3.fromRGB(100, 200, 255), "HexRoot Hub", "Misc")
+				return
+			end
+		end
+		than("⚠️ Tidak ada seed spesial saat ini", 3, Color3.fromRGB(255, 200, 0), "HexRoot Hub", "Misc")
+	end
+})
+
+MiscSection:AddButton({
+	Title    = "Rejoin Server",
+	Callback = function()
+		than("🔄 Rejoining server...", 3, Color3.fromRGB(200, 200, 200), "HexRoot Hub", "Misc")
+		task.wait(1)
+		game:GetService("TeleportService"):Teleport(game.PlaceId, LocalPlayer)
+	end
+})
+
+local ConfigSection = ConfigTab:AddSection("Config Manager", false)
+ConfigSection:AddConfig({})
+
+task.spawn(function()
+	local lastMoonScan = 0
+	while true do
+		local ok, err = pcall(function()
+			local cycleIndex, phaseIndex, phase, elapsed, remaining = getCycleState()
+			local weatherName, weatherData = getWeatherForPhase(cycleIndex, phaseIndex, phase)
+
+			CurrentPhaseLabel:SetContent(phase.Name)
+			CurrentWeatherLabel:SetContent(weatherName)
+			TimeRemainingLabel:SetContent(formatTimeCycle(remaining))
+
+			local upcoming = predictUpcoming(#UpcomingLabels)
+			for i, data in ipairs(upcoming) do
+				UpcomingLabels[i]:SetContent(string.format("%s (%s) — in %s", data.PhaseName, data.WeatherName, formatTimeCycle(data.TimeUntil)))
+			end
+
+			for _, w in WeatherData.Data, nil, nil do
+				local playing, timeLeft = getWeatherMachineState(w.Name)
+				local content
+				if playing then
+					content = "ACTIVE — ends in " .. formatTimeCycle(timeLeft)
+				else
+					content = "Inactive"
+				end
+				if WeatherEventLabels[w.Name] then
+					WeatherEventLabels[w.Name]:SetContent(content)
+				end
+			end
+
+			do
+				local rawEndTime = WeatherValues:GetAttribute("Rain_EndTime") or 0
+				local rawPlaying = WeatherValues:GetAttribute("Rain_Playing")
+				local clientNow = DateTime.now().UnixTimestamp
+				local syncedNow = serverSyncedNow()
+				local rawRemaining = rawEndTime - clientNow
+				local correctedRemaining = rawEndTime - syncedNow
+				RainDebugLabel:SetContent(string.format(
+					"Playing=%s | EndTime=%d | ClientNow=%d | SyncedNow=%d | RawLeft=%ds | CorrectedLeft=%ds",
+					tostring(rawPlaying), rawEndTime, clientNow, syncedNow, rawRemaining, correctedRemaining
+				))
+			end
+
+			if os.clock() - lastMoonScan >= 5 then
+				lastMoonScan = os.clock()
+				local goldmoons = findNextOccurrences("Night", { "Goldmoon" }, 3, 1000)
+				local rainbowMoons = findNextOccurrences("Night", { "Rainbow Moon" }, 3, 2000)
+				if #goldmoons > 0 then
+					GoldmoonLabel:SetContent("in " .. formatTimeCycle(goldmoons[1].TimeUntil))
+					local lines = {}
+					for _, g in ipairs(goldmoons) do table.insert(lines, formatTimeCycle(g.TimeUntil)) end
+					NextGoldmoonsLabel:SetContent(table.concat(lines, " | "))
+				else
+					GoldmoonLabel:SetContent("Not found in scan range")
+					NextGoldmoonsLabel:SetContent("-")
+				end
+				if #rainbowMoons > 0 then
+					RainbowMoonLabel:SetContent("in " .. formatTimeCycle(rainbowMoons[1].TimeUntil))
+					local lines = {}
+					for _, r in ipairs(rainbowMoons) do table.insert(lines, formatTimeCycle(r.TimeUntil)) end
+					NextRainbowMoonsLabel:SetContent(table.concat(lines, " | "))
+				else
+					RainbowMoonLabel:SetContent("Not found in scan range")
+					NextRainbowMoonsLabel:SetContent("-")
+				end
+			end
+		end)
+		if not ok then warn("[Weather Predictor] Update error:", err) end
+		task.wait(1)
+	end
+end)
